@@ -1,15 +1,13 @@
 """App Flask que lista reclamaciones de seguros de viaje desde un JSON en disco."""
 import json
-import os
-import tempfile
+import queue
 import threading
 import unicodedata
 from datetime import datetime
 
 import agent
 import config as cfg
-import corridas
-from flask import Flask, abort, jsonify, render_template, request, url_for
+from flask import Flask, Response, abort, jsonify, render_template, request, stream_with_context, url_for
 
 cfg.validar_entorno()  # si falta algo en el .env, la app no arranca y dice qué falta
 
@@ -32,59 +30,15 @@ def page_url(state, **changes):
 DATA_FILE = cfg.ruta("CLAIMS_FILE")
 POLICIES_FILE = cfg.ruta("POLICIES_FILE")
 CLAUSES_FILE = cfg.ruta("CLAUSES_FILE")
-REVIEWS_FILE = cfg.ruta("REVIEWS_FILE")
-
-# --- Revisiones del agente: se guardan en disco y se ejecutan en segundo plano ---
-_reviews_lock = threading.Lock()
-
-
-def load_reviews():
-    try:
-        with open(REVIEWS_FILE, encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
-
-
-def _save_review(claim_id, data):
-    """Actualiza la revisión de una reclamación (escritura atómica)."""
-    with _reviews_lock:
-        reviews = load_reviews()
-        reviews[claim_id] = data
-        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(REVIEWS_FILE), suffix=".tmp")
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(reviews, f, ensure_ascii=False, indent=2)
-        os.replace(tmp, REVIEWS_FILE)
-
 
 # Nombres con los que se muestran las arquitecturas en pantalla (única fuente).
 ARQ_NOMBRES = {"langgraph": "LangGraph", "pydantic_ai": "Pydantic AI", "claude_sdk": "Claude Agent SDK",
                "lineas": "Línea por línea", "una_llamada": "Una sola llamada", "reglas": "Reglas"}
 app.jinja_env.globals["arq_nombre"] = lambda a: ARQ_NOMBRES.get(a, a)
 
-
-def _run_review(claim_id, started, runs):
-    """Proceso del agente (hilo): ejecuta una o varias corridas seguidas y guarda el veredicto de la última.
-
-    runs: lista de opciones para agent.revisar (una por tecnología). Cada corrida queda en el historial.
-    """
-    try:
-        claim = next(c for c in load_claims() if c["id"] == claim_id)
-        policy = next(p for p in load_policies() if p["numero"] == claim["numeroPoliza"])
-        clauses = load_clauses()
-        for i, opts in enumerate(runs, 1):
-            etiqueta = ARQ_NOMBRES.get(opts.get("arquitectura", ""), "") + (f" ({i}/{len(runs)})" if len(runs) > 1 else "")
-
-            def progreso(lineas, fase, etiqueta=etiqueta):  # el agente avisa cada vez que marca una línea
-                _save_review(claim_id, {"estado": "en_proceso", "iniciada": started, "lineas": lineas,
-                                        "fase": f"[{etiqueta}] {fase}" if etiqueta else fase})
-
-            result = agent.revisar(claim, policy, clauses, on_progress=progreso, **opts)
-            corridas.registrar(claim, result, started)  # historial para comparar modelos y arquitecturas
-        _save_review(claim_id, {"estado": "completada", "iniciada": started,
-                                "finalizada": datetime.now().isoformat(timespec="seconds"), **result})
-    except Exception as e:  # el proceso nunca debe quedarse «en proceso» para siempre
-        _save_review(claim_id, {"estado": "error", "iniciada": started, "error": f"{type(e).__name__}: {e}"})
+# Los resultados del agente son SOLO virtuales: se emiten al navegador mientras se calculan y no se guardan
+# en archivo ni en base de datos. Este cupo limita cuántas revisiones corren a la vez (protege al servidor LLM).
+_cupo = threading.BoundedSemaphore(cfg.entero("MAX_CORRIDAS_SIMULTANEAS"))
 
 PER_PAGE_OPTIONS = cfg.enteros("PER_PAGE_OPTIONS")
 
@@ -160,7 +114,7 @@ def index():
     }
     state = dict(q=q, tipo=tipo, sort=sort, dir="desc" if desc else "asc", n=per_page)
     return render_template(
-        "index.html", rows=rows[start:start + per_page], found=len(rows), kpis=kpis, reviews=load_reviews(),
+        "index.html", rows=rows[start:start + per_page], found=len(rows), kpis=kpis,
         tipos=sorted({c["tipoReclamacion"] for c in claims}),
         page=page, pages=pages, start=start, per_page=per_page, per_page_options=PER_PAGE_OPTIONS,
         state=state, sort=sort, desc=desc, arq_def=cfg.get("AGENT_ARCH"),
@@ -176,74 +130,69 @@ def detail(claim_id):
     clauses = load_clauses()
     clause = clauses.get(claim["cobertura"].get("clausula"))
     return render_template("detail.html", c=claim, policy=policy, clause=clause,
-                           review=load_reviews().get(claim_id), agent_mode=agent.modo_efectivo(),
                            modelos=agent.listar_modelos(), modelo_def=cfg.opcional("OLLAMA_MODEL"),
                            arq_def=cfg.get("AGENT_ARCH"),
-                           corridas_caso=[c for c in corridas.cargar() if c["claimId"] == claim_id][::-1][:15],
-                           cmp=corridas.comparativa([c for c in corridas.cargar() if c["claimId"] == claim_id]),
                            back=request.args.get("back") or url_for("index"))
 
 
 @app.route("/reclamaciones/<claim_id>/revision", methods=["POST"])
 def start_review(claim_id):
-    """Botón «Revisar con el agente»: arranca el proceso en segundo plano."""
-    if not any(c["id"] == claim_id for c in load_claims()):
+    """Ejecuta UNA revisión y la emite en directo al navegador (una línea JSON por evento).
+
+    Nada se guarda: si el navegador se va o se refresca, la corrida se descarta.
+    Eventos: {"tipo": "progreso", "lineas": [...], "fase": "..."}, {"tipo": "fin", "resultado": {...}},
+    {"tipo": "error", "error": "..."}.
+    """
+    claim = next((c for c in load_claims() if c["id"] == claim_id), None)
+    if claim is None:
         abort(404)
-    current = load_reviews().get(claim_id)
-    if current and current.get("estado") == "en_proceso":
-        return jsonify(current), 409
-    body = request.get_json(silent=True) or {}
-    arq = body.get("arquitectura")
-    if arq not in agent.ARQUITECTURAS + ("todas",):
-        arq = None
+    policy = next((p for p in load_policies() if p["numero"] == claim["numeroPoliza"]), None)
+    body = request.get_json(silent=True)
+    arq = body.get("arquitectura") if isinstance(body, dict) else None
+    if arq not in agent.ARQUITECTURAS:  # una petición mal formada no debe arrancar una revisión (cuesta llamadas al LLM)
+        return jsonify({"error": "Indica una arquitectura válida: " + ", ".join(agent.ARQUITECTURAS)}), 400
+    opts = {"arquitectura": arq}
     modelo = body.get("modelo")
-    if modelo:
-        modelos = agent.listar_modelos()
-        if modelo not in modelos and modelo != cfg.opcional("OLLAMA_MODEL"):
+    if modelo and arq != "claude_sdk":
+        if modelo not in agent.listar_modelos() and modelo != cfg.opcional("OLLAMA_MODEL"):
             return jsonify({"error": "modelo no disponible"}), 400
-    tecnologias = corridas.TECNOLOGIAS if arq == "todas" else (arq,)
-    runs = []
-    for t in tecnologias:
-        opts = {}
-        if t:
-            opts["arquitectura"] = t
-        if t == "claude_sdk":  # solo Claude: ignora el modelo de Ollama elegido
-            opts["motor"] = "claude"
-        else:
-            if body.get("motor") in ("reglas", "ollama", "claude"):
-                opts["motor"] = body["motor"]
-            elif t in agent.ARQ_EXTERNAS:
-                opts["motor"] = "ollama"  # LangGraph y Pydantic AI usan el LLM de Ollama
-            if modelo:
-                opts["modelo"] = modelo
-        runs.append(opts)
-    started = datetime.now().isoformat(timespec="seconds")
-    _save_review(claim_id, {"estado": "en_proceso", "iniciada": started})
-    threading.Thread(target=_run_review, args=(claim_id, started, runs), daemon=True).start()
-    return jsonify({"estado": "en_proceso", "iniciada": started}), 202
+        opts["modelo"] = modelo
+    if arq == "claude_sdk":
+        opts["motor"] = "claude"  # solo Claude: ignora el modelo de Ollama elegido
+    elif body.get("motor") in ("reglas", "ollama", "claude"):
+        opts["motor"] = body["motor"]
+    elif arq in agent.ARQ_EXTERNAS:
+        opts["motor"] = "ollama"  # LangGraph y Pydantic AI usan el LLM de Ollama
+    if not _cupo.acquire(blocking=False):
+        return jsonify({"error": "Hay demasiadas revisiones en curso; espera a que termine alguna."}), 429
 
+    eventos, cancelado = queue.Queue(), threading.Event()
+    clauses = load_clauses()
 
-@app.route("/api/revisiones/<claim_id>")
-def api_review(claim_id):
-    return jsonify(load_reviews().get(claim_id, {"estado": "sin_revisar"}))
+    def trabajo():
+        try:
+            def progreso(lineas, fase):  # el agente avisa cada vez que marca una línea
+                if not cancelado.is_set():
+                    eventos.put({"tipo": "progreso", "lineas": lineas, "fase": fase})
 
+            eventos.put({"tipo": "fin", "resultado": agent.revisar(claim, policy, clauses, on_progress=progreso, **opts)})
+        except Exception as e:  # la revisión nunca debe quedarse colgada para el navegador
+            eventos.put({"tipo": "error", "error": f"{type(e).__name__}: {e}"})
+        finally:
+            _cupo.release()
+            eventos.put(None)
 
-@app.route("/api/revisiones")
-def api_reviews():
-    return jsonify(load_reviews())
+    threading.Thread(target=trabajo, daemon=True).start()
 
+    def flujo():
+        try:
+            while (ev := eventos.get()) is not None:
+                yield json.dumps(ev, ensure_ascii=False) + "\n"
+        finally:
+            cancelado.set()  # el navegador se fue (p. ej. refresco): se descarta el resto
 
-@app.route("/estadisticas")
-def stats_page():
-    todas = corridas.cargar()
-    return render_template("estadisticas.html", filas=corridas.resumen(todas), total=len(todas),
-                           ultimas=todas[::-1][:25])
-
-
-@app.route("/api/estadisticas")
-def api_stats():
-    todas = corridas.cargar()
-    return jsonify({"resumen": corridas.resumen(todas), "corridas": todas})
+    return Response(stream_with_context(flujo()), mimetype="application/x-ndjson",
+                    headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
 @app.route("/polizas")

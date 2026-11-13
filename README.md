@@ -13,4 +13,6 @@ python3 app.py
 
 - Toda la configuración está en el `.env` (nada va fijo en el código). `.env.example` es la plantilla.
 - Documentación completa: [docs/DOCUMENTACION.md](docs/DOCUMENTACION.md).
-- Comparar modelos y arquitecturas: `python bench.py` y la página `/estadisticas`.
+- Los resultados del agente son solo virtuales: no se guardan y desaparecen al refrescar la página.
+- Comparar modelos y arquitecturas: los 3 botones y el panel de comparación de la ficha, o `python bench.py`.
+- Tests de regresión: `python3 -m unittest discover -s tests`.

@@ -1,35 +1,40 @@
 {% extends "base.html" %}
 {% block title %}{{ c.id }}{% endblock %}
 {% block scripts %}
+<script src="{{ url_for('static', filename='agente.js') }}"></script>
 <script>
 (function () {
+  // Estado SOLO en la memoria de esta página: al refrescar, todo vuelve a empezar.
+  const A = window.Agente, corridas = [];
   const card = document.getElementById('agente'), id = card.dataset.id;
   const botones = document.querySelectorAll('button[data-arq]');
-  const fase = document.getElementById('agent-fase'), ul = document.getElementById('agent-lines');
-  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  function pintar(lineas) {
-    ul.innerHTML = lineas.map(k => `<li class="ln ln-${k.estado}"><span class="ico"></span><span class="txt">${esc(k.requisito)}<small class="d">${esc(k.detalle)}</small></span><span class="grp">${esc(k.grupo)}</span></li>`).join('');
-  }
-  async function poll() {
-    const r = await (await fetch('/api/revisiones/' + id)).json();
-    if (r.estado === 'en_proceso') {
-      if (r.lineas) pintar(r.lineas);
-      fase.hidden = false; fase.textContent = r.fase || 'Analizando…';
-      return setTimeout(poll, 600);
+  const fase = document.getElementById('agent-fase'), ul = document.getElementById('agent-lines'), res = document.getElementById('agent-result');
+  const comparacion = document.getElementById('comparacion'), tabla = document.getElementById('corridas-caso');
+  const pintar = () => {
+    comparacion.innerHTML = A.comparacionHtml(corridas);
+    tabla.hidden = corridas.length < 2;
+    if (corridas.length > 1) tabla.innerHTML = A.corridasHtml(corridas);
+  };
+  async function correr(lista) {
+    botones.forEach(b => { b.disabled = true; });
+    res.innerHTML = ''; ul.innerHTML = '';
+    for (let i = 0; i < lista.length; i++) {
+      const arq = lista[i], etiqueta = A.nombre(arq) + (lista.length > 1 ? ' (' + (i + 1) + '/' + lista.length + ')' : '');
+      fase.hidden = false; fase.textContent = '[' + etiqueta + '] Iniciando el análisis…'; ul.innerHTML = '';
+      const sel = document.getElementById('sel-modelo');
+      try {
+        const r = await A.ejecutar(id, arq, sel ? sel.value : null, ev => { ul.innerHTML = A.lineasHtml(ev.lineas); fase.textContent = '[' + etiqueta + '] ' + ev.fase; });
+        r._hora = new Date(); corridas.push(r);
+        ul.innerHTML = A.lineasHtml(r.lineas); res.innerHTML = A.resultadoHtml(r);
+      } catch (e) {
+        res.innerHTML = '<p class="reject-box">La revisión con ' + A.esc(A.nombre(arq)) + ' falló: ' + A.esc(e.message) + '</p>';
+      }
+      pintar();
     }
-    location.reload();
+    fase.hidden = true; botones.forEach(b => { b.disabled = false; });
   }
-  botones.forEach(b => b.addEventListener('click', async () => {
-    botones.forEach(x => x.disabled = true);
-    fase.hidden = false; fase.textContent = 'Iniciando el análisis…'; ul.innerHTML = '';
-    document.querySelectorAll('.verdict, .vmotivo, .vcomment').forEach(e => e.remove());
-    const sel = document.getElementById('sel-modelo');
-    const resp = await fetch('/reclamaciones/' + id + '/revision', {method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({arquitectura: b.dataset.arq, modelo: sel ? sel.value : null})});
-    if (resp.status === 202 || resp.status === 409) poll();
-    else { botones.forEach(x => x.disabled = false); fase.hidden = true; alert('No se pudo iniciar la revisión (' + resp.status + ')'); }
-  }));
-  if (card.dataset.estado === 'en_proceso') poll();
+  botones.forEach(b => b.addEventListener('click', () => correr(b.dataset.arq === 'todas' ? A.TECNOLOGIAS : [b.dataset.arq])));
+  pintar();
 })();
 </script>
 {% endblock %}
@@ -40,7 +45,7 @@
     <p class="sub"><span class="mono">{{ c.id }}</span> · Ingresada el {{ c.fechaIngreso|fecha }} por {{ c.canal|lower }} · Gestor: {{ c.gestor }}</p></div>
 </div>
 
-<section class="card pad agent-card" id="agente" data-id="{{ c.id }}" data-estado="{{ review.estado if review else 'sin_revisar' }}">
+<section class="card pad agent-card" id="agente" data-id="{{ c.id }}">
   <div class="agent-head">
     <div><h2>Revisión del agente</h2>
       <p class="muted">Elige la tecnología con la que ejecutar la revisión. El agente analiza la reclamación, la póliza y sus cláusulas y emite un veredicto:
@@ -49,83 +54,24 @@
       {% for m in modelos %}<option value="{{ m }}" {{ 'selected' if m == modelo_def }}>{{ m }}</option>{% endfor %}
     </select></label></div>{% endif %}
   </div>
-  {% set corriendo = review and review.estado == 'en_proceso' %}
   <div class="tec-btns">
-    <button class="tec" data-arq="langgraph" {{ 'disabled' if corriendo }}><b>LangGraph</b><small>grafo de nodos, líneas en paralelo</small></button>
-    <button class="tec" data-arq="pydantic_ai" {{ 'disabled' if corriendo }}><b>Pydantic AI</b><small>una consulta con salida tipada</small></button>
-    <button class="tec" data-arq="claude_sdk" {{ 'disabled' if corriendo }}><b>Claude Agent SDK</b><small>el agente lee los datos con herramientas · usa Claude</small></button>
-    <button class="primary" data-arq="todas" {{ 'disabled' if corriendo }}>Ejecutar las 3 y comparar</button>
+    <button class="tec" data-arq="langgraph"><b>LangGraph</b><small>grafo de nodos, líneas en paralelo</small></button>
+    <button class="tec" data-arq="pydantic_ai"><b>Pydantic AI</b><small>una consulta con salida tipada</small></button>
+    <button class="tec" data-arq="claude_sdk"><b>Claude Agent SDK</b><small>el agente lee los datos con herramientas · usa Claude</small></button>
+    <button class="primary" data-arq="todas">Ejecutar las 3 y comparar</button>
   </div>
   <details class="clause-box base-arq"><summary><b>Arquitecturas propias</b><span class="muted">línea base para comparar</span></summary>
-    <div class="tec-btns"><button class="tec" data-arq="lineas" {{ 'disabled' if corriendo }}><b>Línea por línea</b><small>una consulta por requisito</small></button>
-      <button class="tec" data-arq="una_llamada" {{ 'disabled' if corriendo }}><b>Una sola llamada</b><small>todo en una consulta</small></button></div>
+    <div class="tec-btns"><button class="tec" data-arq="lineas"><b>Línea por línea</b><small>una consulta por requisito</small></button>
+      <button class="tec" data-arq="una_llamada"><b>Una sola llamada</b><small>todo en una consulta</small></button></div>
   </details>
-  <p id="agent-fase" class="muted" {{ 'hidden' if not (review and review.estado == 'en_proceso') }}>{{ review.fase if review and review.fase else '⏳ Iniciando el análisis…' }}</p>
-  <ul id="agent-lines" class="docs lines">
-    {% if review and review.lineas %}{% for k in review.lineas %}<li class="ln ln-{{ k.estado }}"><span class="ico"></span><span class="txt">{{ k.requisito }}<small class="d">{{ k.detalle }}</small></span><span class="grp">{{ k.grupo }}</span></li>{% endfor %}{% endif %}
-  </ul>
-  {% if review and review.estado == 'completada' %}
-    <div class="verdict v-{{ review.veredicto }}"><span class="vlabel">Veredicto</span><b>{{ review.veredicto }}</b>
-      {% if review.importeAPagar is not none and review.veredicto == 'Aprobado' %}<span class="vamount">Importe a pagar: {{ review.importeAPagar|eur }}</span>{% endif %}</div>
-    {% if review.stats %}<p class="vstats">⏱ Procesado en <b>{{ review.stats.duracionSeg }} s</b> con <b>{{ arq_nombre(review.stats.arquitectura) }}</b>{% if review.stats.modelo %} ({{ review.stats.modelo }}){% endif %} · {{ review.stats.llamadas }} llamada{{ 's' if review.stats.llamadas != 1 }} · {{ '{:,}'.format(review.stats.tokensEntrada + review.stats.tokensSalida).replace(',', '.') }} tokens{% if review.stats.fallback %} · <span class="tag no">sin LLM: cayó a reglas</span>{% endif %} <a href="#estadisticas-corrida">ver detalle</a></p>{% endif %}
-    <p class="vmotivo">{{ review.motivo }}</p>
-    {% if review.veredicto == 'Validar' %}
-      <label class="vcomment"><span>Comentario del agente</span><textarea readonly rows="4">{{ review.comentario }}</textarea></label>
-    {% endif %}
-    <p class="muted small">Revisado por {{ review.agente.tipo|capitalize ~ ' (' ~ review.agente.modelo ~ ')' if review.agente.modelo else 'el revisor por reglas' }} el {{ review.finalizada[:10]|fecha }} a las {{ review.finalizada[11:16] }} · {{ review.duracionSeg }} s{% if review.nota %} · {{ review.nota }}{% endif %}</p>
-    {% if review.stats %}{% set st = review.stats %}
-    <h3 id="estadisticas-corrida">Estadísticas de la corrida</h3>
-    <div class="statgrid">
-      <div><span>Duración</span><b>{{ st.duracionSeg }} s</b></div>
-      <div><span>Arquitectura</span><b>{{ arq_nombre(st.arquitectura) }}</b></div>
-      <div><span>Modelo</span><b>{{ st.modelo or 'sin LLM' }}</b></div>
-      <div><span>Llamadas al LLM</span><b>{{ st.llamadas }}</b></div>
-      <div><span>Tokens (entrada / salida)</span><b>{{ '{:,}'.format(st.tokensEntrada).replace(',', '.') }} / {{ '{:,}'.format(st.tokensSalida).replace(',', '.') }}</b></div>
-      <div><span>Acuerdo con las reglas</span><b>{{ ('Sí' if st.acuerdoVeredicto else 'No (reglas: ' ~ st.veredictoReglas ~ ')') if st.acuerdoVeredicto is not none else '—' }}{% if st.lineasComparables %} · líneas {{ st.lineasAcuerdo }}/{{ st.lineasComparables }}{% endif %}</b></div>
-    </div>
-    {% if st.tiempos and st.tiempos|length > 1 %}
-    <details class="clause-box"><summary><b>Tiempo por línea</b><span class="muted">veredicto: {{ st.veredictoSeg }} s</span></summary>
-      {% set mx = st.tiempos|map(attribute='seg')|max or 1 %}
-      <table class="mini bars"><tbody>{% for t in st.tiempos %}<tr><td class="mono">{{ t.id }}</td><td><span class="bar" style="width:{{ (100 * t.seg / mx)|round|int }}%"></span></td><td class="num mono">{{ t.seg }} s</td></tr>{% endfor %}</tbody></table>
-    </details>{% endif %}
-    {% endif %}
-  {% elif review and review.estado == 'error' %}
-    <p class="reject-box">La revisión falló: {{ review.error }}</p>
-  {% endif %}
+  <p id="agent-fase" class="muted" hidden></p>
+  <ul id="agent-lines" class="docs lines"></ul>
+  <div id="agent-result"></div>
+  <p class="muted small virtual">🔒 Los resultados del agente son solo virtuales: no se guardan en ningún archivo ni base de datos y desaparecen al refrescar la página.</p>
 </section>
 
-<section class="card pad" id="comparacion">
-  <h2>Comparación de las 3 tecnologías</h2>
-  {% if cmp.n == 0 %}<p class="muted">Aún no hay corridas de LangGraph, Pydantic AI ni Claude Agent SDK para esta reclamación. Pulsa «Ejecutar las 3 y comparar».</p>
-  {% else %}
-  {% if cmp.coinciden is not none %}<p class="agree {{ 'ok' if cmp.coinciden else 'diff' }}">
-    {% if cmp.coinciden %}✓ Las {{ cmp.n }} tecnologías coinciden en el veredicto{% else %}⚠ Las tecnologías <b>no coinciden</b> en el veredicto{% endif %}
-    {% if cmp.dif_lineas %} · {{ cmp.dif_lineas }} línea{{ 's' if cmp.dif_lineas > 1 }} con resultados distintos{% endif %}.</p>{% endif %}
-  <div class="scroll"><table class="cmp3">
-    <thead><tr><th></th>{% for k in cmp.columnas %}<th>{{ arq_nombre(k.arq) }}{% if k.disponible %}<small>{{ k.corrida.stats.modelo }}</small>{% endif %}</th>{% endfor %}</tr></thead>
-    <tbody>
-      <tr><th>Veredicto</th>{% for k in cmp.columnas %}<td>{% if k.disponible %}<span class="badge v-{{ k.corrida.veredicto }}">{{ k.corrida.veredicto }}</span>
-        {% elif k.corrida %}<span class="muted">No disponible</span><small class="d">{{ k.nota }}</small>{% else %}<span class="muted">Sin ejecutar</span>{% endif %}</td>{% endfor %}</tr>
-      <tr><th>Importe a pagar</th>{% for k in cmp.columnas %}<td class="mono">{{ (k.corrida.importeAPagar|eur) if k.disponible and k.corrida.veredicto == 'Aprobado' else '—' }}</td>{% endfor %}</tr>
-      <tr><th>Duración</th>{% for k in cmp.columnas %}<td class="mono {{ 'best' if k.arq == cmp.masRapida }}">{{ k.corrida.stats.duracionSeg ~ ' s' if k.disponible else '—' }}{{ ' ⚡' if k.arq == cmp.masRapida }}</td>{% endfor %}</tr>
-      <tr><th>Llamadas al modelo</th>{% for k in cmp.columnas %}<td>{{ k.corrida.stats.llamadas if k.disponible else '—' }}</td>{% endfor %}</tr>
-      <tr><th>Tokens (entrada / salida)</th>{% for k in cmp.columnas %}<td class="mono">{{ k.corrida.stats.tokensEntrada ~ ' / ' ~ k.corrida.stats.tokensSalida if k.disponible else '—' }}</td>{% endfor %}</tr>
-      <tr><th>Acuerdo con las reglas</th>{% for k in cmp.columnas %}<td>{% if k.disponible and k.corrida.stats.acuerdoVeredicto is not none %}{{ 'Sí' if k.corrida.stats.acuerdoVeredicto else 'No (reglas: ' ~ k.corrida.stats.veredictoReglas ~ ')' }}{% if k.corrida.stats.lineasComparables %} · {{ k.corrida.stats.lineasAcuerdo }}/{{ k.corrida.stats.lineasComparables }} líneas{% endif %}{% else %}—{% endif %}</td>{% endfor %}</tr>
-      <tr><th>Motivo</th>{% for k in cmp.columnas %}<td class="motivo">{{ k.corrida.motivo if k.disponible else '—' }}</td>{% endfor %}</tr>
-      {% if cmp.lineas %}<tr class="sep"><th colspan="4">Resultado por línea</th></tr>
-      {% for l in cmp.lineas %}<tr class="{{ 'dif' if l.difiere }}"><th>{{ l.requisito }}</th>{% for k in cmp.columnas %}<td>{% set e = l.estados.get(k.arq) %}{% if e %}<span class="eico e-{{ e }}" title="{{ e|replace('_', ' ') }}"></span>{% else %}—{% endif %}</td>{% endfor %}</tr>{% endfor %}{% endif %}
-    </tbody></table></div>
-  {% endif %}
-</section>
-
-{% if corridas_caso|length > 1 %}
-<section class="card pad"><h2>Corridas de esta reclamación <span class="muted">· comparación</span></h2>
-  <table class="mini cmp"><thead><tr><th>Cuándo</th><th>Arquitectura</th><th>Modelo</th><th>Veredicto</th><th class="num">Duración</th><th class="num">Llamadas</th><th class="num">Tokens</th></tr></thead><tbody>
-  {% for c in corridas_caso %}<tr><td class="mono">{{ c.finalizada[11:19] }}</td><td>{{ arq_nombre(c.stats.arquitectura) }}</td>
-    <td>{{ c.stats.modelo or '—' }}{% if c.stats.fallback %} <span class="tag no">fallback</span>{% endif %}</td><td><span class="badge v-{{ c.veredicto }}">{{ c.veredicto }}</span></td>
-    <td class="num mono">{{ c.stats.duracionSeg }} s</td><td class="num">{{ c.stats.llamadas }}</td><td class="num mono">{{ c.stats.tokensEntrada + c.stats.tokensSalida }}</td></tr>{% endfor %}
-  </tbody></table></section>
-{% endif %}
+<section class="card pad" id="comparacion"></section>
+<section class="card pad" id="corridas-caso" hidden></section>
 
 <section class="kpis three">
   <div class="kpi blue"><span>Importe reclamado</span><b>{{ c.importeReclamado|eur }}</b><small>{{ c.desglose|length }} conceptos</small></div>

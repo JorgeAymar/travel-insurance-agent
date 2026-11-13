@@ -31,7 +31,7 @@
   <span class="muted small">Elige uno y pulsa «Revisar» en la reclamación. Para ejecutar los tres y compararlos, abre la ficha.</span>
 </section>
 <section class="card pad" id="resumen-proc" hidden>
-  <div class="card-h2"><b>Estadísticas del procesamiento</b><a href="{{ url_for('stats_page') }}">Comparar modelos y arquitecturas →</a></div>
+  <div class="card-h2"><b>Estadísticas del procesamiento</b><span class="muted small">🔒 solo virtual: se borra al refrescar</span></div>
   <div class="statgrid" id="resumen-grid"></div>
 </section>
 <section class="card">
@@ -52,7 +52,7 @@
         <td>{{ c.canal }}</td>
         <td class="mono">{{ c.fechaInicioViaje|fecha }}</td><td class="mono">{{ c.fechaFinViaje|fecha }}</td>
         <td>{{ c.destino }}</td>
-        <td class="rev" data-id="{{ c.id }}">{% set rv = reviews.get(c.id) %}<span class="res">{% if rv and rv.estado == 'completada' %}<span class="badge v-{{ rv.veredicto }}">{{ rv.veredicto }}</span><small class="d">{{ arq_nombre(rv.stats.arquitectura) if rv.stats else '' }}{% if rv.stats %} · {{ rv.stats.duracionSeg }} s · {{ rv.stats.llamadas }} llam.{% endif %}</small>{% elif rv and rv.estado == 'en_proceso' %}<span class="muted">Revisando…</span>{% else %}<span class="muted">—</span>{% endif %}</span>
+        <td class="rev" data-id="{{ c.id }}"><span class="res"><span class="muted">—</span></span>
           <button type="button" class="run-btn" data-id="{{ c.id }}">Revisar</button></td>
       </tr>
     {% else %}<tr><td colspan="9" class="empty">Sin resultados para este filtro.</td></tr>{% endfor %}
@@ -68,66 +68,39 @@
     </span>
   </div>
 </section>
+<script src="{{ url_for('static', filename='agente.js') }}"></script>
 <script>
 document.querySelectorAll('tr.row').forEach(r => {
   r.addEventListener('click', e => { if (!e.target.closest('a, button')) location.href = r.dataset.href; });
   r.addEventListener('keydown', e => { if (e.key === 'Enter') location.href = r.dataset.href; });
 });
 
-// --- Agente que procesa: 3 botones (se recuerda la elección) y «Revisar» por fila
+// --- Agente que procesa: 3 botones y «Revisar» por fila. Los resultados viven SOLO en esta página (se pierden al refrescar).
 (function () {
+  const A = window.Agente, resultados = {};
   const barra = document.getElementById('tecbar'), opciones = barra.querySelectorAll('.tec-opt');
   const validas = [...opciones].map(b => b.dataset.arq);
-  let elegida = null;
-  try { elegida = localStorage.getItem('agente_arq'); } catch (e) {}
-  if (!validas.includes(elegida)) elegida = validas.includes(barra.dataset.def) ? barra.dataset.def : validas[0];
+  let elegida = validas.includes(barra.dataset.def) ? barra.dataset.def : validas[0];
   const marcar = () => opciones.forEach(b => b.classList.toggle('on', b.dataset.arq === elegida));
-  opciones.forEach(b => b.addEventListener('click', () => { elegida = b.dataset.arq; try { localStorage.setItem('agente_arq', elegida); } catch (e) {} marcar(); }));
+  opciones.forEach(b => b.addEventListener('click', () => { elegida = b.dataset.arq; marcar(); }));
   marcar();
-  const nombres = {langgraph: 'LangGraph', pydantic_ai: 'Pydantic AI', claude_sdk: 'Claude Agent SDK'};
-  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  async function seguir(id, celda) {
-    const r = await (await fetch('/api/revisiones/' + id)).json();
-    const res = celda.querySelector('.res'), btn = celda.querySelector('.run-btn');
-    if (r.estado === 'en_proceso') { res.innerHTML = '<span class="muted">' + esc(r.fase ? r.fase.slice(0, 38) : 'Revisando…') + '</span>'; return setTimeout(() => seguir(id, celda), 800); }
-    btn.disabled = false;
-    if (r.estado === 'completada') {
-      const s = r.stats || {};
-      res.innerHTML = '<span class="badge v-' + esc(r.veredicto) + '">' + esc(r.veredicto) + '</span><small class="d">' + esc(nombres[s.arquitectura] || s.arquitectura || '')
-        + (s.fallback ? ' (sin LLM)' : '') + ' · ' + esc(s.duracionSeg) + ' s · ' + esc(s.llamadas) + ' llam.</small>';
-    } else res.innerHTML = '<span class="muted">Error</span>';
-    resumen();
+  function resumen() {
+    const celdas = A.resumen(Object.values(resultados)), panel = document.getElementById('resumen-proc');
+    panel.hidden = !celdas.length;
+    document.getElementById('resumen-grid').innerHTML = celdas.map(([k, x]) => '<div><span>' + A.esc(k) + '</span><b>' + A.esc(x) + '</b></div>').join('');
   }
   document.querySelectorAll('.run-btn').forEach(btn => btn.addEventListener('click', async () => {
-    const celda = btn.closest('.rev'), id = btn.dataset.id;
-    btn.disabled = true; celda.querySelector('.res').innerHTML = '<span class="muted">Iniciando…</span>';
-    const resp = await fetch('/reclamaciones/' + id + '/revision', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({arquitectura: elegida})});
-    if (resp.status === 202 || resp.status === 409) seguir(id, celda); else { btn.disabled = false; celda.querySelector('.res').innerHTML = '<span class="muted">Error ' + resp.status + '</span>'; }
+    const celda = btn.closest('.rev'), id = btn.dataset.id, res = celda.querySelector('.res');
+    btn.disabled = true; res.innerHTML = '<span class="muted">Iniciando…</span>';
+    try {
+      const r = await A.ejecutar(id, elegida, null, ev => { res.innerHTML = '<span class="muted">' + A.esc((ev.fase || 'Revisando…').slice(0, 38)) + '</span>'; });
+      resultados[id] = r;
+      const s = r.stats;
+      res.innerHTML = '<span class="badge v-' + A.esc(r.veredicto) + '">' + A.esc(r.veredicto) + '</span><small class="d">' + A.esc(A.nombre(s.arquitectura)) + (s.fallback ? ' (sin LLM)' : '') + ' · ' + A.num(s.duracionSeg) + ' s · ' + s.llamadas + ' llam.</small>';
+      resumen();
+    } catch (e) { res.innerHTML = '<span class="muted" title="' + A.esc(e.message) + '">Error</span>'; }
+    btn.disabled = false;
   }));
-  // Resumen de lo procesado: se recalcula con las revisiones guardadas cada vez que termina una
-  const num = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 1});
-  async function resumen() {
-    const todas = Object.values(await (await fetch('/api/revisiones')).json()).filter(r => r.estado === 'completada' && r.stats);
-    const panel = document.getElementById('resumen-proc');
-    if (!todas.length) { panel.hidden = true; return; }
-    const dur = todas.map(r => r.stats.duracionSeg).sort((a, b) => a - b), suma = (f) => todas.reduce((t, r) => t + (f(r) || 0), 0);
-    const v = k => todas.filter(r => r.veredicto === k).length, fb = todas.filter(r => r.stats.fallback).length;
-    const celdas = [
-      ['Reclamaciones procesadas', todas.length],
-      ['Veredictos (A / R / V)', v('Aprobado') + ' / ' + v('Rechazado') + ' / ' + v('Validar')],
-      ['Duración total', num(suma(r => r.stats.duracionSeg)) + ' s'],
-      ['Duración media · mediana · máx.', num(suma(r => r.stats.duracionSeg) / todas.length) + ' · ' + num(dur[Math.floor(dur.length / 2)]) + ' · ' + num(dur[dur.length - 1]) + ' s'],
-      ['Llamadas al modelo', num(suma(r => r.stats.llamadas))],
-      ['Tokens (entrada / salida)', num(suma(r => r.stats.tokensEntrada)) + ' / ' + num(suma(r => r.stats.tokensSalida))],
-      ['Acuerdo con las reglas', (() => { const c = todas.filter(r => r.stats.acuerdoVeredicto !== null && r.stats.acuerdoVeredicto !== undefined); return c.length ? Math.round(100 * c.filter(r => r.stats.acuerdoVeredicto).length / c.length) + ' % (' + c.length + ')' : '—'; })()],
-      ['Sin LLM (cayeron a reglas)', fb],
-    ];
-    document.getElementById('resumen-grid').innerHTML = celdas.map(([k, x]) => '<div><span>' + esc(k) + '</span><b>' + esc(x) + '</b></div>').join('');
-    panel.hidden = false;
-  }
-  resumen();
-  // las revisiones que ya estaban en curso al abrir la página
-  document.querySelectorAll('.rev').forEach(c => { if (c.querySelector('.res').textContent.includes('Revisando')) { c.querySelector('.run-btn').disabled = true; seguir(c.dataset.id, c); } });
 })();
 </script>
 {% endblock %}

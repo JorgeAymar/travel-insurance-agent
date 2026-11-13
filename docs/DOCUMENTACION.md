@@ -34,8 +34,10 @@ python3 app.py               # escucha en el HOST y PORT del .env
 | `agent.py` | Agente de revisión (reglas, Ollama o Claude; cinco arquitecturas) y sus estadísticas |
 | `arq_langgraph.py`, `arq_pydantic_ai.py`, `arq_claude_sdk.py` | Las tres tecnologías que se comparan: LangGraph, Pydantic AI y Claude Agent SDK |
 | `requirements-extra.txt` | Dependencias opcionales de esas tres tecnologías |
-| `corridas.py` | Historial de corridas y agregación para comparar modelos y arquitecturas |
-| `bench.py` | Benchmark: corre el agente sobre las mismas reclamaciones con varios modelos y arquitecturas |
+| `corridas.py` | Agregación **en memoria** de corridas (lo usa `bench.py`); no guarda nada |
+| `static/agente.js` | Cliente del agente en el navegador: recibe la revisión en directo y dibuja líneas, veredicto, estadísticas y comparación |
+| `tests/` | Tests de regresión (`python3 -m unittest discover -s tests`) |
+| `bench.py` | Benchmark: corre el agente sobre las mismas reclamaciones con varios modelos y arquitecturas y resume en pantalla |
 | `config.py` | Lee y valida el `.env`; único sitio donde se lee `os.environ` |
 | `generate_data.py` | Genera los tres JSON con datos ficticios coherentes entre sí |
 | `data/claims.json`, `polizas.json`, `clausulas.json` | 200 reclamaciones, 120 pólizas y 20 cláusulas de ejemplo |
@@ -53,9 +55,8 @@ python3 app.py               # escucha en el HOST y PORT del .env
 | `/reclamaciones/<id>` | **Ficha** de una reclamación; se abre al hacer clic en una fila |
 | `/polizas` | Listado de pólizas con búsqueda por póliza, tomador o DNI y filtro por plan |
 | `/polizas/<número>` | Ficha de póliza: requisitos de pago, coberturas, cláusulas, pagos y reclamaciones |
-| `/estadisticas` | Comparación de modelos y arquitecturas del agente a partir del historial de corridas |
-| `/reclamaciones/<id>/revision` (POST) | Arranca la revisión del agente en segundo plano |
-| `/api/claims`, `/api/policies`, `/api/clauses`, `/api/revisiones`, `/api/estadisticas` | Los datos en JSON, pensados para que los consuma el agente |
+| `/reclamaciones/<id>/revision` (POST) | Ejecuta UNA revisión y la emite en directo (una línea JSON por evento). Exige `{"arquitectura": ...}`; si no, 400. Máximo `MAX_CORRIDAS_SIMULTANEAS` a la vez (429 si se supera) |
+| `/api/claims`, `/api/policies`, `/api/clauses` | Los datos en JSON |
 
 ## 4.1 Listado de reclamaciones
 
@@ -143,7 +144,8 @@ Todas las situaciones y porcentajes están en `data/clausulas.json` y se ven en 
 # 8. Decisiones de diseño
 
 - **JSON en disco, sin base de datos**: simple de editar y de sustituir por datos reales.
-- **El estado y el resultado se ocultan en la web.** Las reclamaciones las va a analizar un agente, así que la interfaz no muestra el estado, el importe aprobado, el motivo de rechazo ni las comprobaciones previas. Esos campos siguen existiendo en `claims.json`.
+- **Los resultados del agente son virtuales.** No se persisten en archivo ni base de datos y se pierden al refrescar.
+- **El estado y el resultado de ejemplo se ocultan en la web.** Las reclamaciones las va a analizar un agente, así que la interfaz no muestra el estado, el importe aprobado, el motivo de rechazo ni las comprobaciones previas. Esos campos siguen existiendo en `claims.json`.
 - **Diseño**: generado con Google Stitch (estilo corporativo en azul marino y cian) y adaptado a Flask, con tema claro y oscuro.
 - **Sin dependencias de front-end**: HTML, CSS y una pizca de JavaScript para abrir la ficha al hacer clic en la fila.
 
@@ -173,14 +175,16 @@ Si una tecnología no puede correr (falta la clave, el paquete o el servidor), c
 
 El LLM no tiene por qué respetar el esquema JSON que se le pide (con algunos modelos, el servidor lo ignora), así que las respuestas se interpretan de forma tolerante y el veredicto se ajusta si contradice las líneas marcadas.
 
-## 9.1 Estadísticas del procesamiento
+## 9.1 Resultados virtuales y estadísticas
 
-Al terminar cada corrida se sabe cuánto ha costado procesarla:
+**El resultado del agente es solo virtual.** No se guarda en ningún archivo ni base de datos (ni en `localStorage` o `sessionStorage`): el servidor lo emite en directo mientras se calcula y vive solo en la memoria de la página. **Al refrescar la página todo vuelve al estado inicial limpio.** Si el navegador se va a mitad de una revisión, el servidor la descarta. Cambiar de página (por ejemplo, del listado a una ficha) también empieza de cero.
+
+Al terminar cada corrida se sabe cuánto ha costado:
 
 - **En la ficha**: bajo el veredicto, una línea con la duración, la tecnología, las llamadas y los tokens; debajo, el detalle (tiempo por línea, acuerdo con las reglas).
-- **En el listado**: cada fila muestra su tecnología, duración y llamadas, y un panel resume todo lo procesado (veredictos, duración total, media, mediana y máximo, llamadas, tokens, acuerdo con las reglas y corridas que cayeron a reglas). Se actualiza solo al terminar cada revisión.
-- **Comparación de las 3 tecnologías** (ficha): veredicto, importe, duración (marca la más rápida), llamadas, tokens, acuerdo con las reglas, motivo y una matriz de resultado por línea con las discrepancias resaltadas.
-- **`/estadisticas`**: agrupa por arquitectura y modelo (mediana, p95 y máximo de duración, llamadas, tokens, acuerdo y reparto de veredictos).
+- **En el listado**: cada fila muestra su tecnología, duración y llamadas, y un panel resume lo procesado en esa página (veredictos, duración total, media, mediana y máximo, llamadas, tokens, acuerdo con las reglas y corridas que cayeron a reglas).
+- **Comparación de las 3 tecnologías** (ficha): veredicto, importe, duración (marca la más rápida), llamadas, tokens, acuerdo con las reglas, motivo y una matriz de resultado por línea con las discrepancias resaltadas, más la lista de corridas hechas en esa página.
+- **`bench.py`**: para comparar muchas reclamaciones a la vez; resume mediana, p95, llamadas, tokens y acuerdo por arquitectura y modelo, en pantalla, sin guardar nada.
 
 Para comparar con justicia hay que usar las **mismas reclamaciones** en todas las variantes:
 
@@ -198,7 +202,8 @@ Todo valor variable está en el `.env`; `.env.example` lista todas las variables
 |---|---|
 | Marca y usuario de la cabecera | `APP_NAME`, `APP_TAGLINE`, `APP_USER_NAME`, `APP_USER_ROLE` |
 | Servidor | `HOST`, `PORT`, `FLASK_DEBUG`, `PER_PAGE_OPTIONS` |
-| Archivos de datos | `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE`, `REVIEWS_FILE`, `CORRIDAS_FILE` |
+| Archivos de datos | `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE` |
+| Revisiones del agente | `MAX_CORRIDAS_SIMULTANEAS` (revisiones a la vez; protege al servidor LLM) |
 | Datos | `MAX_RECLAMACIONES` (tope de reclamaciones que carga la app) |
 | Reglas del agente | `IMPORTE_ALTO_VALIDAR`, `PLAZO_RECLAMACION_DIAS` |
 | Agente | `AGENT_MODE`, `AGENT_ARCH`, `AGENT_STEP_DELAY`, `AGENT_USER_AGENT` |
