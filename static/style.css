@@ -26,7 +26,7 @@ button.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-w
 .card-h,.card-f{display:flex;align-items:center;gap:14px;padding:12px 16px}.card-h{border-bottom:1px solid var(--line)}
 .card-f{border-top:1px solid var(--line);justify-content:space-between;flex-wrap:wrap;color:var(--muted)}
 .pill{background:color-mix(in srgb,var(--cyan) 15%,transparent);color:var(--blue);padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600}
-.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:1330px}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:1000px}
 th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{background:color-mix(in srgb,var(--blue) 6%,var(--card));font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
 th a{color:var(--muted)}th a.on{color:var(--blue)}.num{text-align:right}
@@ -116,3 +116,7 @@ table.cmp3 tr.dif th,table.cmp3 tr.dif td{background:color-mix(in srgb,var(--amb
 .card-h2{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.card-h2 a{font-size:13px}
 #resumen-proc .statgrid{grid-template-columns:repeat(4,1fr)}.vstats{margin:4px 0 8px;font-size:13px;color:var(--muted)}.vstats b{color:var(--fg)}
 @media (max-width:900px){#resumen-proc .statgrid{grid-template-columns:1fr 1fr}}
+
+/* La columna de «Revisar» se queda pegada a la derecha: el botón siempre es visible, incluso con la tabla desplazada */
+th.rev-h,td.rev{position:sticky;right:0;z-index:1}
+td.rev,tr.row:hover td.rev,tr.row:focus td.rev{background:var(--card);box-shadow:-8px 0 8px -8px rgba(0,0,0,.25)}

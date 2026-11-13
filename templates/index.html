@@ -40,7 +40,7 @@
     <thead><tr>{% for key, label in cols %}
       <th class="{{ 'num' if key == 'importeReclamado' }}"><a class="{{ 'on' if sort == key }}"
         href="{{ page_url(state, sort=key, dir=('asc' if sort == key and desc else 'desc'), p=1) }}">{{ label }}{{ ' ↓' if sort == key and desc }}{{ ' ↑' if sort == key and not desc }}</a></th>
-    {% endfor %}<th>Revisión del agente</th></tr></thead>
+    {% endfor %}<th class="rev-h">Revisión del agente</th></tr></thead>
     <tbody>
     {% for c in rows %}
       {% set href = url_for('detail', claim_id=c.id, back=request.full_path) %}
