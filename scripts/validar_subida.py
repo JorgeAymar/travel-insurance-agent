@@ -13,6 +13,8 @@ Reglas (si alguna falla, la subida se bloquea):
   4. En .env.example los valores privados deben estar vacíos.
   5. En el código: nada de URLs, IPs, rutas personales ni valores por defecto de os.environ (todo va al .env).
   6. Sin correos reales (solo @example.*) ni rutas del equipo (/Users/...).
+  7. El autor y el committer de cada commit deben usar el correo «noreply» de GitHub (el correo personal queda
+     visible públicamente en el historial).
 Esta validación mira también TODOS los commits que se suben, no solo el último: un secreto añadido
 y borrado después sigue estando en el historial.
 """
@@ -54,6 +56,7 @@ RUTA_PERSONAL = re.compile(r"/Users/[A-Za-z0-9._-]+|/home/[A-Za-z0-9._-]+|[A-Z]:
 CLAVE_PRIVADA = re.compile(r"(^|_)(TOKEN|API_KEY|KEY|SECRET|PASSWORD|PASSWD)$|_URL$", re.I)
 # Claves cuyo valor es un dato personal: no pueden aparecer en ningún archivo, aunque en .env.example lleven un valor de ejemplo.
 CLAVES_PERSONALES = re.compile(r"^APP_USER_NAME$")
+CORREO_PERMITIDO = re.compile(r"@users\.noreply\.github\.com$|@example\.(com|org|net)$", re.I)  # correos de autor válidos
 EXENTOS_CODIGO = {"config.py"}  # el único sitio donde se lee os.environ
 EXENTOS_VALIDADOR = {"scripts/validar_subida.py"}  # contiene ejemplos de rutas y patrones en su propio texto
 
@@ -128,9 +131,17 @@ def lineas_añadidas(diff):
             n += 1
 
 
+def revisar_autor(etiqueta, correo, problemas):
+    if correo and not CORREO_PERMITIDO.search(correo):
+        problemas.append((etiqueta, 0, "el correo del autor es personal y quedaría público: usa el correo noreply de GitHub "
+                                       "(git config user.email <id>+<usuario>@users.noreply.github.com)"))
+
+
 def main():
     modo = sys.argv[1] if len(sys.argv) > 1 else "--todo"
     privados, problemas = valores_privados_locales(), []
+    if modo != "--push":  # en commit y en la revisión manual se mira la identidad configurada
+        revisar_autor("git config user.email", git("config", "user.email").strip(), problemas)
 
     if modo == "--staged":
         for a in git("diff", "--cached", "--name-only", "--diff-filter=AM").split():
@@ -149,6 +160,9 @@ def main():
                 rango += ["--not", "--remotes"]
             commits |= set(git("rev-list", *rango).split())
         for c in sorted(commits):
+            ae, ce = (git("log", "-1", "--format=%ae %ce", c).split() + ["", ""])[:2]
+            revisar_autor(f"commit {c[:7]} (autor)", ae, problemas)
+            revisar_autor(f"commit {c[:7]} (committer)", ce, problemas)
             for a in git("diff-tree", "--no-commit-id", "--name-only", "-r", "--root", "--diff-filter=AM", c).split():
                 revisar_ruta(a, problemas)
             for a, n, t in lineas_añadidas(git("show", "--format=", "-U0", "--no-color", c)):

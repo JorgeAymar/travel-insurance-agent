@@ -175,7 +175,7 @@ def start_review(claim_id):
 
             eventos.put({"tipo": "fin", "resultado": agent.revisar(claim, policy, clauses, on_progress=progreso, **opts)})
         except Exception as e:  # la revisión nunca debe quedarse colgada para el navegador
-            eventos.put({"tipo": "error", "error": f"{type(e).__name__}: {e}"})
+            eventos.put({"tipo": "error", "error": cfg.ocultar(f"{type(e).__name__}: {e}")})
         finally:
             _cupo.release()
             eventos.put(None)

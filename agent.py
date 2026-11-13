@@ -426,7 +426,7 @@ def revisar(claim, policy, clauses, on_progress=None, motor=None, modelo=None, a
     except Exception as e:  # sin clave, SDK antiguo, red, respuesta inválida...
         if motor == "reglas":
             raise
-        nota = f"{motor.capitalize()} no disponible ({type(e).__name__}: {str(e)[:120]}); se usó el revisor por reglas."
+        nota = cfg.ocultar(f"{motor.capitalize()} no disponible ({type(e).__name__}: {str(e)[:120]}); se usó el revisor por reglas.")
         fallback = True
         resultado = _correr("reglas", None, "reglas", claim, policy, clauses, on_progress, pausa)
         resultado["stats"]["intento"] = {"arquitectura": arq, "modelo": modelo or cfg.opcional("OLLAMA_MODEL" if motor == "ollama" else "AGENT_MODEL")}

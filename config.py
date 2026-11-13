@@ -88,6 +88,21 @@ def modo_agente():
     return modo
 
 
+def ocultar(texto):
+    """Quita de un texto (errores, notas) los valores privados del .env: URL y host del servidor, token y claves.
+
+    Se usa en todo lo que se envía al navegador, para que un mensaje de error no revele el servidor ni una credencial.
+    """
+    texto = str(texto)
+    privados = [opcional("OLLAMA_TOKEN"), opcional("ANTHROPIC_API_KEY")]
+    url = opcional("OLLAMA_URL").rstrip("/")
+    if url:
+        privados += [url, url.split("//")[-1].split("/")[0]]  # la URL completa y solo el host
+    for valor in sorted({v for v in privados if len(v) >= 4}, key=len, reverse=True):
+        texto = texto.replace(valor, "[oculto]")
+    return texto
+
+
 def validar_entorno():
     """Comprueba al arrancar que están todas las variables necesarias; si no, lista las que faltan."""
     faltan = [n for n in OBLIGATORIAS if not opcional(n)]
