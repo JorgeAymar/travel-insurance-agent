@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Reclamaciones{% endblock %} · Portal de Siniestros</title>
+<title>{% block title %}Reclamaciones{% endblock %} · {{ app_name }}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="logo">⛨</span><div><b>Portal de Siniestros</b><small>Seguros de viaje</small></div></div>
-  <nav><a class="{{ 'on' if request.endpoint in ('index', 'detail') }}" href="{{ url_for('index') }}">Reclamaciones</a><a class="{{ 'on' if request.endpoint in ('policies', 'policy_detail') }}" href="{{ url_for('policies') }}">Pólizas</a><a>Proveedores</a><a>Informes</a></nav>
-  <div class="user"><div><b>Mateo Ruiz</b><small>Gestor senior</small></div><span class="avatar">CM</span></div>
+  <div class="brand"><span class="logo">⛨</span><div><b>{{ app_name }}</b><small>{{ app_tagline }}</small></div></div>
+  <nav><a class="{{ 'on' if request.endpoint in ('index', 'detail') }}" href="{{ url_for('index') }}">Reclamaciones</a><a class="{{ 'on' if request.endpoint in ('policies', 'policy_detail') }}" href="{{ url_for('policies') }}">Pólizas</a><a>Proveedores</a><a class="{{ 'on' if request.endpoint == 'stats_page' }}" href="{{ url_for('stats_page') }}">Estadísticas</a></nav>
+  <div class="user"><div><b>{{ user_name }}</b><small>{{ user_role }}</small></div><span class="avatar">{{ user_initials }}</span></div>
 </header>
 <main>{% block content %}{% endblock %}</main>
 {% block scripts %}{% endblock %}

@@ -5,33 +5,33 @@ import tempfile
 import threading
 from datetime import datetime
 
-from dotenv import load_dotenv
 import agent
+import config as cfg
+import corridas
 from flask import Flask, abort, jsonify, render_template, request, url_for
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(BASE_DIR, ".env"))  # las variables ya definidas en el entorno tienen prioridad
+cfg.validar_entorno()  # si falta algo en el .env, la app no arranca y dice qué falta
 
 app = Flask(__name__)
 app.jinja_env.globals.update(max=max, min=min)
+
+
+@app.context_processor
+def marca():
+    """Nombre de la app y del usuario para la cabecera (vienen del .env)."""
+    nombre = cfg.get("APP_USER_NAME")
+    return {"app_name": cfg.get("APP_NAME"), "app_tagline": cfg.get("APP_TAGLINE"), "user_name": nombre,
+            "user_role": cfg.get("APP_USER_ROLE"), "user_initials": "".join(p[0] for p in nombre.split()[:2]).upper()}
 
 
 @app.template_global()
 def page_url(state, **changes):
     """URL del listado conservando filtros/orden y aplicando los cambios dados."""
     return url_for("index", **{**state, **changes})
-DATA_DIR = os.path.join(BASE_DIR, "data")
-
-
-def _path(var, default):
-    """Ruta desde la variable de entorno (relativa al proyecto si no es absoluta)."""
-    return os.path.join(BASE_DIR, os.environ.get(var, default))
-
-
-DATA_FILE = _path("CLAIMS_FILE", "data/claims.json")
-POLICIES_FILE = _path("POLICIES_FILE", "data/polizas.json")
-CLAUSES_FILE = _path("CLAUSES_FILE", "data/clausulas.json")
-REVIEWS_FILE = _path("REVIEWS_FILE", "data/revisiones.json")
+DATA_FILE = cfg.ruta("CLAIMS_FILE")
+POLICIES_FILE = cfg.ruta("POLICIES_FILE")
+CLAUSES_FILE = cfg.ruta("CLAUSES_FILE")
+REVIEWS_FILE = cfg.ruta("REVIEWS_FILE")
 
 # --- Revisiones del agente: se guardan en disco y se ejecutan en segundo plano ---
 _reviews_lock = threading.Lock()
@@ -56,7 +56,7 @@ def _save_review(claim_id, data):
         os.replace(tmp, REVIEWS_FILE)
 
 
-def _run_review(claim_id, started):
+def _run_review(claim_id, started, opts):
     """Proceso del agente (hilo): carga los datos, revisa y guarda el veredicto."""
     try:
         claim = next(c for c in load_claims() if c["id"] == claim_id)
@@ -64,13 +64,14 @@ def _run_review(claim_id, started):
         def progreso(lineas, fase):  # el agente avisa cada vez que marca una línea
             _save_review(claim_id, {"estado": "en_proceso", "iniciada": started, "lineas": lineas, "fase": fase})
 
-        result = agent.revisar(claim, policy, load_clauses(), on_progress=progreso)
+        result = agent.revisar(claim, policy, load_clauses(), on_progress=progreso, **opts)
+        corridas.registrar(claim, result, started)  # historial para comparar modelos y arquitecturas
         _save_review(claim_id, {"estado": "completada", "iniciada": started,
                                 "finalizada": datetime.now().isoformat(timespec="seconds"), **result})
     except Exception as e:  # el proceso nunca debe quedarse «en proceso» para siempre
         _save_review(claim_id, {"estado": "error", "iniciada": started, "error": f"{type(e).__name__}: {e}"})
 
-PER_PAGE_OPTIONS = (10, 25, 50, 100)
+PER_PAGE_OPTIONS = cfg.enteros("PER_PAGE_OPTIONS")
 
 
 def _load(path):
@@ -108,8 +109,8 @@ def index():
     a = request.args
     q, tipo = a.get("q", "").strip(), a.get("tipo", "")
     sort, desc = a.get("sort", "fechaIngreso"), a.get("dir", "desc") == "desc"
-    per_page = a.get("n", 10, type=int)
-    per_page = per_page if per_page in PER_PAGE_OPTIONS else 10
+    per_page = a.get("n", PER_PAGE_OPTIONS[0], type=int)
+    per_page = per_page if per_page in PER_PAGE_OPTIONS else PER_PAGE_OPTIONS[0]
 
     rows = [
         c for c in claims
@@ -150,6 +151,9 @@ def detail(claim_id):
     clause = clauses.get(claim["cobertura"].get("clausula"))
     return render_template("detail.html", c=claim, policy=policy, clause=clause,
                            review=load_reviews().get(claim_id), agent_mode=agent.modo_efectivo(),
+                           modelos=agent.listar_modelos(), modelo_def=cfg.opcional("OLLAMA_MODEL"),
+                           arq_def=cfg.get("AGENT_ARCH"),
+                           corridas_caso=[c for c in corridas.cargar() if c["claimId"] == claim_id][::-1][:15],
                            back=request.args.get("back") or url_for("index"))
 
 
@@ -161,9 +165,21 @@ def start_review(claim_id):
     current = load_reviews().get(claim_id)
     if current and current.get("estado") == "en_proceso":
         return jsonify(current), 409
+    body = request.get_json(silent=True) or {}
+    opts = {}
+    if body.get("motor") in ("reglas", "ollama", "claude"):
+        opts["motor"] = body["motor"]
+    if body.get("arquitectura") in ("lineas", "una_llamada"):
+        opts["arquitectura"] = body["arquitectura"]
+    if body.get("modelo"):
+        modelos = agent.listar_modelos()
+        if body["modelo"] in modelos or body["modelo"] == cfg.opcional("OLLAMA_MODEL") or opts.get("motor") == "claude":
+            opts["modelo"] = body["modelo"]
+        else:
+            return jsonify({"error": "modelo no disponible"}), 400
     started = datetime.now().isoformat(timespec="seconds")
     _save_review(claim_id, {"estado": "en_proceso", "iniciada": started})
-    threading.Thread(target=_run_review, args=(claim_id, started), daemon=True).start()
+    threading.Thread(target=_run_review, args=(claim_id, started, opts), daemon=True).start()
     return jsonify({"estado": "en_proceso", "iniciada": started}), 202
 
 
@@ -175,6 +191,19 @@ def api_review(claim_id):
 @app.route("/api/revisiones")
 def api_reviews():
     return jsonify(load_reviews())
+
+
+@app.route("/estadisticas")
+def stats_page():
+    todas = corridas.cargar()
+    return render_template("estadisticas.html", filas=corridas.resumen(todas), total=len(todas),
+                           ultimas=todas[::-1][:25])
+
+
+@app.route("/api/estadisticas")
+def api_stats():
+    todas = corridas.cargar()
+    return jsonify({"resumen": corridas.resumen(todas), "corridas": todas})
 
 
 @app.route("/polizas")
@@ -194,7 +223,7 @@ def policies():
     ]
     rows.sort(key=lambda p: p["viaje"]["inicio"], reverse=True)
     return render_template("polizas.html", rows=rows, n_claims=n_claims, q=request.args.get("q", ""),
-                           plan=plan, planes=["Básico", "Estándar", "Premium"],
+                           plan=plan, planes=sorted({p["plan"] for p in load_policies()}),
                            total=len(load_policies()))
 
 
@@ -227,5 +256,4 @@ def api_claims():
 
 
 if __name__ == "__main__":
-    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=int(os.environ.get("PORT", 5001)),
-            debug=os.environ.get("FLASK_DEBUG", "1") == "1")
+    app.run(host=cfg.get("HOST"), port=cfg.entero("PORT"), debug=cfg.booleano("FLASK_DEBUG"))

@@ -13,27 +13,33 @@ El objetivo es que cada reclamación llegue con toda la información necesaria p
 # 2. Cómo ejecutarla
 
 ```bash
-cd Travel-Insurance-agent
+git clone <repositorio> && cd travel-insurance-agent
 pip install -r requirements.txt
+cp .env.example .env         # y rellena los valores (ver sección 11)
+sh scripts/instalar_hooks.sh # activa la validación de datos privados al hacer commit y push
 python3 generate_data.py     # regenera los JSON de ejemplo (opcional)
-python3 app.py               # http://localhost:5001
+python3 app.py               # escucha en el HOST y PORT del .env
 ```
 
-- El puerto por defecto es **5001**, porque en macOS el 5000 lo usa AirPlay Receiver. Se cambia con `PORT=8000 python3 app.py`.
+- **Toda la configuración vive en el `.env`**; el código no tiene valores por defecto. Si falta una variable obligatoria, la app no arranca y dice cuáles faltan.
 - Los JSON se leen en **cada petición**: editar un fichero y recargar la página basta para ver los cambios.
-- Rutas de los ficheros configurables con las variables `CLAIMS_FILE`, `POLICIES_FILE` y `CLAUSES_FILE`.
+- El puerto 5000 lo usa AirPlay Receiver en macOS; por eso el ejemplo usa otro.
 
 # 3. Estructura del proyecto
 
 | Ruta | Contenido |
 |---|---|
-| `app.py` | Servidor Flask: rutas, filtros, paginación y carga de los JSON |
+| `app.py` | Servidor Flask: rutas, filtros, paginación, proceso de revisión en segundo plano |
+| `agent.py` | Agente de revisión (reglas, Ollama o Claude; dos arquitecturas) y sus estadísticas |
+| `corridas.py` | Historial de corridas y agregación para comparar modelos y arquitecturas |
+| `bench.py` | Benchmark: corre el agente sobre las mismas reclamaciones con varios modelos y arquitecturas |
+| `config.py` | Lee y valida el `.env`; único sitio donde se lee `os.environ` |
 | `generate_data.py` | Genera los tres JSON con datos ficticios coherentes entre sí |
-| `data/claims.json` | 200 reclamaciones |
-| `data/polizas.json` | 120 pólizas, con coberturas y calendario de pagos |
-| `data/clausulas.json` | 20 cláusulas: 13 por cobertura y 7 generales |
-| `templates/` | Plantillas: `base`, `index` (listado), `detail` (ficha de reclamación), `polizas`, `poliza` |
-| `static/style.css` | Estilos (tema claro y oscuro) |
+| `data/claims.json`, `polizas.json`, `clausulas.json` | 200 reclamaciones, 120 pólizas y 20 cláusulas de ejemplo |
+| `templates/`, `static/style.css` | Plantillas y estilos (tema claro y oscuro) |
+| `scripts/validar_subida.py` | Validación de datos privados y configuración fija antes de subir a GitHub |
+| `.githooks/` | Hooks `pre-commit` y `pre-push` que ejecutan esa validación |
+| `.env.example` | Plantilla pública de variables (sin secretos); el `.env` real no se sube |
 | `docs/` | Esta documentación |
 
 # 4. Pantallas y rutas
@@ -44,7 +50,9 @@ python3 app.py               # http://localhost:5001
 | `/reclamaciones/<id>` | **Ficha** de una reclamación; se abre al hacer clic en una fila |
 | `/polizas` | Listado de pólizas con búsqueda por póliza, tomador o DNI y filtro por plan |
 | `/polizas/<número>` | Ficha de póliza: requisitos de pago, coberturas, cláusulas, pagos y reclamaciones |
-| `/api/claims`, `/api/policies`, `/api/clauses` | Los datos en JSON, pensados para que los consuma el agente |
+| `/estadisticas` | Comparación de modelos y arquitecturas del agente a partir del historial de corridas |
+| `/reclamaciones/<id>/revision` (POST) | Arranca la revisión del agente en segundo plano |
+| `/api/claims`, `/api/policies`, `/api/clauses`, `/api/revisiones`, `/api/estadisticas` | Los datos en JSON, pensados para que los consuma el agente |
 
 ## 4.1 Listado de reclamaciones
 
@@ -135,9 +143,71 @@ Todas las situaciones y porcentajes están en `data/clausulas.json` y se ven en 
 - **Diseño**: generado con Google Stitch (estilo corporativo en azul marino y cian) y adaptado a Flask, con tema claro y oscuro.
 - **Sin dependencias de front-end**: HTML, CSS y una pizca de JavaScript para abrir la ficha al hacer clic en la fila.
 
-# 9. Pendiente y próximos pasos
+# 9. Agente de revisión
 
-- Conectar el **agente** que analiza cada reclamación, por ejemplo leyendo `/api/claims`, `/api/policies` y `/api/clauses`.
+Cada reclamación tiene un botón **Revisar con el agente**. Al pulsarlo arranca un proceso en segundo plano que analiza el caso **línea por línea** (requisitos generales de la cláusula G-07, requisitos de la cobertura y un análisis del relato). Cada línea se marca en pantalla, en vivo, como *cumple*, *no cumple* o *duda*. Al final emite el veredicto:
+
+- **Aprobado**: todo cumple. Indica el importe a pagar.
+- **Rechazado**: falla un requisito bloqueante (póliza fuera de vigencia, cuota impagada, cobertura no incluida, 0 %, fuera de plazo, exclusión aplicable).
+- **Validar**: hay dudas o incumplimientos no bloqueantes. Añade un **comentario del agente** con lo que una persona debe comprobar.
+
+El agente decide solo con los hechos del caso, la póliza y las cláusulas: no ve el estado ni el resultado que traen los datos de ejemplo.
+
+**Modos** (`AGENT_MODE`): `reglas` (determinista, sin LLM), `ollama` (un LLM de un servidor Ollama), `claude` (API de Anthropic) o `auto`. Si un modo con LLM falla, se usa el de reglas y queda anotado.
+
+**Arquitecturas** (`AGENT_ARCH` o el selector de la ficha): `lineas` (una consulta por línea y otra para el veredicto) o `una_llamada` (una sola consulta con todo). Los modelos de Ollama se eligen en la ficha; se listan desde el servidor.
+
+El LLM no tiene por qué respetar el esquema JSON que se le pide (con algunos modelos, el servidor lo ignora), así que las respuestas se interpretan de forma tolerante y el veredicto se ajusta si contradice las líneas marcadas.
+
+## 9.1 Estadísticas de las corridas
+
+Cada corrida guarda su duración total, el tiempo por línea, las llamadas al LLM, los tokens, y su acuerdo con el revisor por reglas (veredicto y líneas). La ficha muestra las de la corrida y compara con otras corridas de la misma reclamación. La página `/estadisticas` agrupa por arquitectura y modelo: mediana, p95 y máximo de duración, llamadas, tokens, acuerdo y reparto de veredictos.
+
+Para comparar con justicia hay que usar las **mismas reclamaciones** en todas las variantes:
+
+```bash
+python bench.py --n 10 --modelos modelo1,modelo2 --arq lineas,una_llamada --reglas
+```
+
+El «acuerdo» se mide contra el revisor por reglas, que es una referencia y no la verdad absoluta.
+
+# 10. Configuración (`.env`)
+
+Todo valor variable está en el `.env`; `.env.example` lista todas las variables sin secretos. Grupos:
+
+| Grupo | Variables |
+|---|---|
+| Marca y usuario de la cabecera | `APP_NAME`, `APP_TAGLINE`, `APP_USER_NAME`, `APP_USER_ROLE` |
+| Servidor | `HOST`, `PORT`, `FLASK_DEBUG`, `PER_PAGE_OPTIONS` |
+| Archivos de datos | `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE`, `REVIEWS_FILE`, `CORRIDAS_FILE` |
+| Reglas del agente | `IMPORTE_ALTO_VALIDAR`, `PLAZO_RECLAMACION_DIAS` |
+| Agente | `AGENT_MODE`, `AGENT_ARCH`, `AGENT_STEP_DELAY`, `AGENT_USER_AGENT` |
+| Ollama (si `AGENT_MODE=ollama`) | `OLLAMA_URL`, `OLLAMA_TOKEN`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT`, `OLLAMA_MODELS_TIMEOUT`, `OLLAMA_MODELS_CACHE_SEG`, `OLLAMA_TEMPERATURE` |
+| Claude (si `AGENT_MODE=claude`) | `ANTHROPIC_API_KEY`, `AGENT_MODEL`, `AGENT_MAX_TOKENS` |
+| Benchmark | `BENCH_N`, `BENCH_SEMILLA`, `BENCH_MODELOS`, `BENCH_ARQ`, `BENCH_REPETICIONES`, `BENCH_STEP_DELAY` |
+| Generador de datos | `GEN_RECLAMACIONES`, `GEN_POLIZAS`, `GEN_SEMILLA`, `GEN_FECHA_REFERENCIA`, `GEN_FECHA_INICIO_VIAJES`, `GEN_DIAS_VIAJES` |
+
+Los datos ficticios (nombres, catálogos de tipos, textos de las cláusulas y de los sucesos) son contenido del generador, no configuración.
+
+# 11. Validación antes de subir a GitHub
+
+`scripts/validar_subida.py` bloquea el commit o el push si encuentra datos privados o configuración fija. Se ejecuta solo, con los hooks de `.githooks/` (se activan una vez por clon con `sh scripts/instalar_hooks.sh`), y a mano con `python3 scripts/validar_subida.py --todo`.
+
+| Regla | Qué detecta |
+|---|---|
+| Archivos prohibidos | `.env`, `data/revisiones.json`, `data/corridas.jsonl`, claves y certificados |
+| Secretos | Tokens `Bearer`, claves de Anthropic, GitHub o AWS, claves privadas, cadenas hexadecimales largas |
+| Valores del `.env` local | Cualquier token, clave, URL de servidor o nombre de usuario del `.env` que aparezca en un archivo |
+| `.env.example` | Los valores de tokens, claves y URLs deben estar vacíos |
+| Código | URLs, IPs, valores por defecto en `os.environ.get` y lecturas directas de `os.environ` fuera de `config.py` |
+| Datos personales | Correos que no sean `@example.*` y rutas absolutas de la carpeta personal del equipo |
+
+El push se valida **commit a commit**: un secreto añadido y borrado después sigue en el historial y también se bloquea. `git push --no-verify` se salta los hooks; no lo uses.
+
+# 12. Pendiente y próximos pasos
+
+- Probar el modo `claude` con una clave real (aún no se ha ejecutado).
+- Correr `bench.py` con los modelos y arquitecturas a comparar.
 - Sustituir los datos ficticios, las cláusulas y los límites por los textos reales de las pólizas.
-- Los botones del menú «Proveedores» e «Informes» son decorativos por ahora.
+- El botón «Proveedores» del menú es decorativo por ahora.
 - Añadir autenticación y registro de las decisiones del agente antes de usarlo con datos reales.

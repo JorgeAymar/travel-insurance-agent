@@ -2,7 +2,13 @@
 import json, os, random, unicodedata
 from datetime import date, timedelta
 
-random.seed(42)
+import config as cfg
+
+N_RECLAMACIONES, N_POLIZAS = cfg.entero("GEN_RECLAMACIONES"), cfg.entero("GEN_POLIZAS")
+FECHA_REF = date.fromisoformat(cfg.get("GEN_FECHA_REFERENCIA"))      # hoy, a efectos de «Vigente»/«Finalizada»
+FECHA_INICIO_VIAJES = date.fromisoformat(cfg.get("GEN_FECHA_INICIO_VIAJES"))
+DIAS_VIAJES = cfg.entero("GEN_DIAS_VIAJES")
+random.seed(cfg.entero("GEN_SEMILLA"))
 
 MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
 def iso(d): return d.isoformat()
@@ -360,19 +366,19 @@ for cod, titulo, texto, excl, _ in GENERALES:
 
 PLANES = {'Básico': (0.5, {'legal', 'electronico', 'prepago'}), 'Estándar': (1.0, {'legal'}), 'Premium': (2.0, set())}
 POLIZAS = []
-numeros = random.sample(range(100000, 999999), 120)
-for n in range(120):
+numeros = random.sample(range(100000, 999999), N_POLIZAS)
+for n in range(N_POLIZAS):
     nombre, a1, a2 = random.choice(NOMBRES), random.choice(APELLIDOS), random.choice(APELLIDOS)
     dni = random.randint(10_000_000, 99_999_999)
     plan = random.choices(list(PLANES), weights=[3, 4, 2])[0]
     mult, excl = PLANES[plan]
-    inicio = date(2026, 1, 1) + timedelta(days=random.randint(0, 270))
+    inicio = FECHA_INICIO_VIAJES + timedelta(days=random.randint(0, DIAS_VIAJES))
     fin = inicio + timedelta(days=random.randint(3, 20))
     acomp = personas(random.choice([0, 0, 1, 1, 2, 3]))
     contratacion = inicio - timedelta(days=random.randint(25, 60))
     POLIZAS.append({
         'numero': f'POL-{numeros[n]}', 'plan': plan,
-        'estado': 'Vigente' if fin >= date(2026, 11, 13) else 'Finalizada',
+        'estado': 'Vigente' if fin >= FECHA_REF else 'Finalizada',
         'tomador': {'nombre': nombre, 'apellido1': a1, 'apellido2': a2, 'dni': f'{dni}{LETRAS[dni % 23]}',
                     'email': plano(f'{nombre}.{a1}{n}') + '@example.com', 'telefono': f'+34 6{random.randint(10_000_000, 99_999_999)}'},
         'acompanantes': acomp,
@@ -397,12 +403,13 @@ for n in range(120):
     pol_n['primaPendiente'] = pol_n['prima'] - pol_n['primaPagada']
     pol_n['pagosAlDia'] = all(p['estado'] == 'Pagado' for p in pol_n['pagos'])
 
-os.makedirs('data', exist_ok=True)
-with open('data/clausulas.json', 'w', encoding='utf-8') as fh: json.dump(clausulas, fh, ensure_ascii=False, indent=2)
-with open('data/polizas.json', 'w', encoding='utf-8') as fh: json.dump(POLIZAS, fh, ensure_ascii=False, indent=2)
+for _ruta in ('CLAUSES_FILE', 'POLICIES_FILE', 'CLAIMS_FILE'):
+    os.makedirs(os.path.dirname(cfg.ruta(_ruta)), exist_ok=True)
+with open(cfg.ruta('CLAUSES_FILE'), 'w', encoding='utf-8') as fh: json.dump(clausulas, fh, ensure_ascii=False, indent=2)
+with open(cfg.ruta('POLICIES_FILE'), 'w', encoding='utf-8') as fh: json.dump(POLIZAS, fh, ensure_ascii=False, indent=2)
 
 claims = []
-for i in range(200):
+for i in range(N_RECLAMACIONES):
     tipo, cat_name, hecho = TIPOS[i % 50]
     cat = CAT[cat_name]
     pol = random.choice(POLIZAS)
@@ -562,7 +569,6 @@ for i in range(200):
         'historial': hist, 'notas': '',
     })
 
-os.makedirs('data', exist_ok=True)
-with open('data/claims.json', 'w', encoding='utf-8') as fh:
+with open(cfg.ruta('CLAIMS_FILE'), 'w', encoding='utf-8') as fh:
     json.dump(claims, fh, ensure_ascii=False, indent=2)
 print(f'Generadas {len(claims)} reclamaciones, {len({c["tipoReclamacion"] for c in claims})} tipos.')

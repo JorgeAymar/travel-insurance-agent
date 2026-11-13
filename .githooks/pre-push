@@ -1,0 +1,3 @@
+#!/bin/sh
+# Valida los commits que se van a subir (git pasa por stdin las ramas a subir).
+exec python3 "$(git rev-parse --show-toplevel)/scripts/validar_subida.py" --push

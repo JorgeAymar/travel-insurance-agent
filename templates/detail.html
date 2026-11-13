@@ -21,7 +21,9 @@
   btn.addEventListener('click', async () => {
     btn.disabled = true; btn.textContent = 'Revisando…'; fase.hidden = false; fase.textContent = 'Iniciando el análisis…'; ul.innerHTML = '';
     document.querySelectorAll('.verdict, .vmotivo, .vcomment').forEach(e => e.remove());
-    const resp = await fetch('/reclamaciones/' + id + '/revision', {method: 'POST'});
+    const [motor, modelo] = document.getElementById('sel-modelo').value.split('|');
+    const resp = await fetch('/reclamaciones/' + id + '/revision', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({motor, modelo: modelo || null, arquitectura: document.getElementById('sel-arq').value})});
     if (resp.status === 202 || resp.status === 409) poll(); else { btn.disabled = false; btn.textContent = 'Reintentar'; fase.hidden = true; }
   });
   if (card.dataset.estado === 'en_proceso') poll();
@@ -40,8 +42,18 @@
     <div><h2>Revisión del agente</h2>
       <p class="muted">El agente analiza la reclamación, la póliza y sus cláusulas y emite un veredicto: <b>Aprobado</b>, <b>Rechazado</b> o <b>Validar</b>.
         Modo: {{ {'claude': 'Claude', 'ollama': 'LLM (Ollama)', 'reglas': 'reglas de las cláusulas'}[agent_mode] }}.</p></div>
-    <button id="btn-revisar" class="primary" {{ 'disabled' if review and review.estado == 'en_proceso' }}>
+    <div class="agent-ctl">
+      <label>Motor / modelo<select id="sel-modelo">
+        <option value="reglas|">Reglas (sin LLM)</option>
+        {% for m in modelos %}<option value="ollama|{{ m }}" {{ 'selected' if agent_mode == 'ollama' and m == modelo_def }}>{{ m }}</option>{% endfor %}
+      </select></label>
+      <label>Arquitectura<select id="sel-arq">
+        <option value="lineas" {{ 'selected' if arq_def == 'lineas' }}>Línea por línea</option>
+        <option value="una_llamada" {{ 'selected' if arq_def == 'una_llamada' }}>Una sola llamada</option>
+      </select></label>
+      <button id="btn-revisar" class="primary" {{ 'disabled' if review and review.estado == 'en_proceso' }}>
       {{ 'Revisando…' if review and review.estado == 'en_proceso' else ('Volver a revisar' if review and review.estado == 'completada' else 'Revisar con el agente') }}</button>
+    </div>
   </div>
   <p id="agent-fase" class="muted" {{ 'hidden' if not (review and review.estado == 'en_proceso') }}>{{ review.fase if review and review.fase else '⏳ Iniciando el análisis…' }}</p>
   <ul id="agent-lines" class="docs lines">
@@ -55,10 +67,35 @@
       <label class="vcomment"><span>Comentario del agente</span><textarea readonly rows="4">{{ review.comentario }}</textarea></label>
     {% endif %}
     <p class="muted small">Revisado por {{ review.agente.tipo|capitalize ~ ' (' ~ review.agente.modelo ~ ')' if review.agente.modelo else 'el revisor por reglas' }} el {{ review.finalizada[:10]|fecha }} a las {{ review.finalizada[11:16] }} · {{ review.duracionSeg }} s{% if review.nota %} · {{ review.nota }}{% endif %}</p>
+    {% if review.stats %}{% set st = review.stats %}
+    <h3>Estadísticas de la corrida</h3>
+    <div class="statgrid">
+      <div><span>Duración</span><b>{{ st.duracionSeg }} s</b></div>
+      <div><span>Arquitectura</span><b>{{ {'lineas': 'Línea por línea', 'una_llamada': 'Una sola llamada', 'reglas': 'Reglas'}[st.arquitectura] }}</b></div>
+      <div><span>Modelo</span><b>{{ st.modelo or 'sin LLM' }}</b></div>
+      <div><span>Llamadas al LLM</span><b>{{ st.llamadas }}</b></div>
+      <div><span>Tokens (entrada / salida)</span><b>{{ '{:,}'.format(st.tokensEntrada).replace(',', '.') }} / {{ '{:,}'.format(st.tokensSalida).replace(',', '.') }}</b></div>
+      <div><span>Acuerdo con las reglas</span><b>{{ ('Sí' if st.acuerdoVeredicto else 'No (reglas: ' ~ st.veredictoReglas ~ ')') if st.acuerdoVeredicto is not none else '—' }}{% if st.lineasComparables %} · líneas {{ st.lineasAcuerdo }}/{{ st.lineasComparables }}{% endif %}</b></div>
+    </div>
+    {% if st.tiempos and st.tiempos|length > 1 %}
+    <details class="clause-box"><summary><b>Tiempo por línea</b><span class="muted">veredicto: {{ st.veredictoSeg }} s</span></summary>
+      {% set mx = st.tiempos|map(attribute='seg')|max or 1 %}
+      <table class="mini bars"><tbody>{% for t in st.tiempos %}<tr><td class="mono">{{ t.id }}</td><td><span class="bar" style="width:{{ (100 * t.seg / mx)|round|int }}%"></span></td><td class="num mono">{{ t.seg }} s</td></tr>{% endfor %}</tbody></table>
+    </details>{% endif %}
+    {% endif %}
   {% elif review and review.estado == 'error' %}
     <p class="reject-box">La revisión falló: {{ review.error }}</p>
   {% endif %}
 </section>
+
+{% if corridas_caso|length > 1 %}
+<section class="card pad"><h2>Corridas de esta reclamación <span class="muted">· comparación</span></h2>
+  <table class="mini cmp"><thead><tr><th>Cuándo</th><th>Arquitectura</th><th>Modelo</th><th>Veredicto</th><th class="num">Duración</th><th class="num">Llamadas</th><th class="num">Tokens</th></tr></thead><tbody>
+  {% for c in corridas_caso %}<tr><td class="mono">{{ c.finalizada[11:19] }}</td><td>{{ {'lineas': 'Línea por línea', 'una_llamada': 'Una llamada', 'reglas': 'Reglas'}[c.stats.arquitectura] }}</td>
+    <td>{{ c.stats.modelo or '—' }}{% if c.stats.fallback %} <span class="tag no">fallback</span>{% endif %}</td><td><span class="badge v-{{ c.veredicto }}">{{ c.veredicto }}</span></td>
+    <td class="num mono">{{ c.stats.duracionSeg }} s</td><td class="num">{{ c.stats.llamadas }}</td><td class="num mono">{{ c.stats.tokensEntrada + c.stats.tokensSalida }}</td></tr>{% endfor %}
+  </tbody></table></section>
+{% endif %}
 
 <section class="kpis three">
   <div class="kpi blue"><span>Importe reclamado</span><b>{{ c.importeReclamado|eur }}</b><small>{{ c.desglose|length }} conceptos</small></div>

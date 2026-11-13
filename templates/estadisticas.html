@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Estadísticas{% endblock %}
+{% block content %}
+<div class="crumbs">Inicio › Agente de revisión › <b>Estadísticas</b></div>
+<h1>Estadísticas de las corridas</h1>
+<p class="sub">Comparación de modelos y arquitecturas del agente. {{ total }} corridas registradas.
+  Para generar datos comparables usa <code>python bench.py</code> (mismas reclamaciones para todas las variantes).</p>
+{% if not filas %}
+<section class="card pad"><p>Aún no hay corridas. Pulsa «Revisar con el agente» en una reclamación o ejecuta <code>python bench.py --n 10 --reglas</code>.</p></section>
+{% else %}
+{% set mx = filas|map(attribute='medianaSeg')|select|max or 1 %}
+<section class="card">
+  <div class="card-h"><b>Comparación por arquitectura y modelo</b><span class="pill">{{ filas|length }} variantes</span></div>
+  <div class="scroll"><table style="min-width:1100px">
+    <thead><tr><th>Arquitectura</th><th>Modelo</th><th class="num">Corridas</th><th>Mediana</th><th class="num">p95</th><th class="num">Máx.</th>
+      <th class="num">Llamadas</th><th class="num">Tokens ent.</th><th class="num">Tokens sal.</th><th class="num">Acuerdo veredicto</th><th class="num">Acuerdo líneas</th><th>Veredictos A / R / V</th><th class="num">Fallbacks</th></tr></thead>
+    <tbody>{% for f in filas %}<tr>
+      <td>{{ {'lineas': 'Línea por línea', 'una_llamada': 'Una sola llamada', 'reglas': 'Reglas'}[f.arquitectura] }}</td><td>{{ f.modelo }}</td>
+      <td class="num">{{ f.corridas }}<small class="d">{{ f.reclamaciones }} reclam.</small></td>
+      {% if f.medianaSeg is not none %}<td style="min-width:160px"><span class="bar" style="width:{{ (100 * f.medianaSeg / mx)|round|int }}%"></span> <b class="mono">{{ f.medianaSeg }} s</b></td>
+      <td class="num mono">{{ f.p95Seg }} s</td><td class="num mono">{{ f.maxSeg }} s</td>{% else %}<td colspan="3" class="muted">sin corridas completadas</td>{% endif %}
+      <td class="num">{{ f.llamadas }}</td><td class="num mono">{{ f.tokensEntrada }}</td><td class="num mono">{{ f.tokensSalida }}</td>
+      <td class="num">{{ f.acuerdoVeredicto ~ ' %' if f.acuerdoVeredicto is not none else '—' }}</td>
+      <td class="num">{{ f.acuerdoLineas ~ ' %' if f.acuerdoLineas is not none else '—' }}</td>
+      <td class="mono">{{ f.veredictos.Aprobado }} / {{ f.veredictos.Rechazado }} / {{ f.veredictos.Validar }}</td>
+      <td class="num">{{ f.fallbacks }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+<p class="muted small">Mediana, p95 y máximo son segundos por corrida completa. «Acuerdo» compara con el revisor por reglas, que es una referencia, no la verdad absoluta.
+  Las variantes solo son comparables si se corrieron sobre las mismas reclamaciones.</p>
+<section class="card">
+  <div class="card-h"><b>Últimas corridas</b></div>
+  <div class="scroll"><table style="min-width:900px"><thead><tr><th>Cuándo</th><th>Reclamación</th><th>Arquitectura</th><th>Modelo</th><th>Veredicto</th><th class="num">Duración</th><th class="num">Llamadas</th><th class="num">Tokens</th></tr></thead>
+    <tbody>{% for c in ultimas %}<tr class="row" data-href="{{ url_for('detail', claim_id=c.claimId) }}">
+      <td class="mono">{{ c.finalizada[:10]|fecha }} {{ c.finalizada[11:19] }}</td><td class="mono"><a href="{{ url_for('detail', claim_id=c.claimId) }}">{{ c.claimId }}</a><small class="d">{{ c.tipo }}</small></td>
+      <td>{{ {'lineas': 'Línea por línea', 'una_llamada': 'Una sola llamada', 'reglas': 'Reglas'}[c.stats.arquitectura] }}</td><td>{{ c.stats.modelo or '—' }}{% if c.stats.fallback %} <span class="tag no">fallback</span>{% endif %}</td>
+      <td><span class="badge v-{{ c.veredicto }}">{{ c.veredicto }}</span></td><td class="num mono">{{ c.stats.duracionSeg }} s</td><td class="num">{{ c.stats.llamadas }}</td><td class="num mono">{{ c.stats.tokensEntrada + c.stats.tokensSalida }}</td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% endif %}
+{% endblock %}

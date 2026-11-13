@@ -85,3 +85,11 @@ ul.lines{margin:12px 0 0}ul.lines li.ln{display:flex;gap:10px;align-items:flex-s
 .ln-no_cumple .ico{background:var(--red);border-color:var(--red);color:#fff}.ln-no_cumple .ico::before{content:"✗"}
 .ln-duda .ico{background:var(--amber);border-color:var(--amber);color:#fff}.ln-duda .ico::before{content:"?"}
 @keyframes pulso{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--blue) 25%,transparent)}}
+
+.agent-ctl{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end}
+.agent-ctl label{display:flex;flex-direction:column;font-size:11px;color:var(--muted);gap:3px}.agent-ctl select{font-size:13px;padding:7px 8px;max-width:210px}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}.statgrid div{background:color-mix(in srgb,var(--blue) 6%,var(--card));border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+.statgrid span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.statgrid b{font-size:14px}
+.bar{display:inline-block;height:10px;border-radius:3px;background:var(--cyan);vertical-align:middle;min-width:2px;max-width:100%}
+table.bars td{padding:3px 6px}table.bars td:nth-child(2){width:60%}table.cmp th{background:none;padding:6px 4px;font-size:11px}
+@media (max-width:900px){.statgrid{grid-template-columns:1fr 1fr}}

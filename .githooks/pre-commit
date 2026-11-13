@@ -1,0 +1,3 @@
+#!/bin/sh
+# Valida el índice antes de cada commit.
+exec python3 "$(git rev-parse --show-toplevel)/scripts/validar_subida.py" --staged
