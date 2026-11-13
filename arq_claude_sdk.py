@@ -8,17 +8,20 @@ devuelve el veredicto en JSON.
 Contrato (ver agent.py): correr(spec, claim, policy, clauses, llm, med, avisar, motor, modelo)
     -> (veredicto, info, tiempos, veredicto_seg)
 
-Seguridad y coste (el agente real NO debe usar otra credencial ni salirse de los datos):
-  - Exige ANTHROPIC_API_KEY (config.ConfigError si falta) y la pasa explícitamente en `options.env`.
-  - `--bare`: el CLI solo autentica con ANTHROPIC_API_KEY (no lee OAuth ni llavero de la sesión local).
-  - Además se vacían en `env` otras credenciales/proveedores que el CLI heredaría del proceso.
+Backend: el MISMO LLM de Ollama que usan las demás tecnologías, no la API de Anthropic. El servidor Ollama
+acepta el protocolo de mensajes de Anthropic, así que el CLI del SDK se apunta a él (ANTHROPIC_BASE_URL) con el
+token de Ollama como credencial Bearer (ANTHROPIC_AUTH_TOKEN). No hace falta ANTHROPIC_API_KEY.
+
+Aislamiento (el agente no debe usar otra credencial ni salirse de los datos):
+  - CLAUDE_CONFIG_DIR apunta a una carpeta temporal vacía: el CLI no ve ninguna sesión, OAuth, llavero, ajuste,
+    plugin ni memoria del usuario. Las demás credenciales y proveedores heredados del entorno se vacían.
+  - Todos los alias de modelo (opus, sonnet, haiku) apuntan al modelo de Ollama elegido, y se desactiva el
+    tráfico no esencial (telemetría, actualizaciones).
   - `--restricted` + setting_sources=[] + strict_mcp_config: sin Bash/WebFetch, sin ajustes de usuario/proyecto
     ni MCP externos; las herramientas de archivo quedan confinadas a la carpeta de datos (cwd).
   - Los datos que ve el agente son COPIAS SANEADAS en una carpeta temporal (sin los campos de resultado del
-    revisor: estado, importe aprobado, motivo de rechazo…), que se borra al terminar. Así ni el .env, ni el código,
-    ni los resultados de ejecución, ni las respuestas «correctas» están a su alcance.
-  - Un hook PreToolUse deniega toda llamada que no sea Read/Grep sobre EXACTAMENTE los 3 archivos de datos
-    (así no ve .env, el código ni los resultados de ejecución que haya en la carpeta de datos).
+    revisor: estado, importe aprobado, motivo de rechazo…), que se borra al terminar.
+  - Un hook PreToolUse deniega toda llamada que no sea Read/Grep sobre EXACTAMENTE los 3 archivos de datos.
   - `disallowed_tools` quita del contexto del modelo las herramientas de escritura, shell y red.
 """
 import asyncio
@@ -34,8 +37,11 @@ import agent
 import config as cfg
 
 # Credenciales y proveedores alternativos que el CLI podría heredar del entorno del proceso: se anulan.
-_ENV_ANULADAS = ("ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_BASE_URL", "ANTHROPIC_CUSTOM_HEADERS",
+_ENV_ANULADAS = ("ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_CUSTOM_HEADERS",
                  "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX", "CLAUDE_CODE_USE_FOUNDRY")
+# Variables del CLI que fijan el modelo por rol (principal y «rápido»): todas apuntan al modelo de Ollama.
+_ENV_MODELOS = ("ANTHROPIC_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL", "ANTHROPIC_DEFAULT_SONNET_MODEL",
+                "ANTHROPIC_DEFAULT_HAIKU_MODEL", "ANTHROPIC_SMALL_FAST_MODEL")
 _NO_PERMITIDAS = ["Bash", "BashOutput", "KillShell", "Write", "Edit", "MultiEdit", "NotebookEdit", "WebFetch",
                   "WebSearch", "Task", "Agent", "Glob", "TodoWrite", "PowerShell"]
 
@@ -99,10 +105,17 @@ def _hook_solo_datos(permitidas, archivos, cwd):
     return hook
 
 
-def _opciones(clave, modelo, cwd, archivos):
+def _opciones(url, token, modelo, cwd, archivos, config_dir):
     herramientas = _herramientas()
     env = {nombre: "" for nombre in _ENV_ANULADAS}
-    env["ANTHROPIC_API_KEY"] = clave  # única credencial: la del .env, explícita
+    env["ANTHROPIC_BASE_URL"] = url             # el servidor Ollama (habla el protocolo de mensajes de Anthropic)
+    env["ANTHROPIC_AUTH_TOKEN"] = token         # única credencial: el token de Ollama del .env (cabecera Bearer)
+    env["CLAUDE_CONFIG_DIR"] = config_dir       # carpeta vacía: ninguna sesión, ajuste ni plugin del usuario
+    env["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = "1"
+    env["DISABLE_TELEMETRY"] = "1"
+    env["DISABLE_AUTOUPDATER"] = "1"
+    for nombre in _ENV_MODELOS:
+        env[nombre] = modelo
     return ClaudeAgentOptions(
         system_prompt=SISTEMA_SDK.replace("{ocultos}", ", ".join(sorted(agent.CAMPOS_OCULTOS))),
         tools=herramientas,                 # conjunto base de herramientas integradas
@@ -110,13 +123,13 @@ def _opciones(clave, modelo, cwd, archivos):
         disallowed_tools=[t for t in _NO_PERMITIDAS if t not in herramientas],
         permission_mode="dontAsk",          # lo que no esté preaprobado se deniega
         max_turns=cfg.entero("CLAUDE_SDK_MAX_TURNOS"),
-        model=modelo or cfg.get("AGENT_MODEL"),
+        model=modelo,
         cwd=cwd,
         env=env,
         setting_sources=[],                 # sin ajustes de usuario/proyecto/local (ni hooks, ni CLAUDE.md)
         strict_mcp_config=True,             # sin servidores MCP externos
         skills=[],
-        extra_args={"bare": None, "restricted": None},  # auth solo por API key; herramientas confinadas al cwd
+        extra_args={"restricted": None},  # herramientas confinadas al cwd, sin shell ni red
         hooks={"PreToolUse": [HookMatcher(matcher=None, hooks=[_hook_solo_datos(herramientas, archivos, cwd)])]},
     )
 
@@ -172,15 +185,17 @@ async def _ejecutar(prompt, opciones, avisar):
 
 
 def correr(spec, claim, policy, clauses, llm, med, avisar, motor, modelo):
-    clave = cfg.get("ANTHROPIC_API_KEY")  # config.ConfigError si falta: el llamador cae al revisor por reglas
-    modelo = modelo or cfg.get("AGENT_MODEL")
+    url, token = cfg.get("OLLAMA_URL").rstrip("/"), cfg.get("OLLAMA_TOKEN")  # ConfigError si faltan: cae a reglas
+    modelo = modelo or cfg.get("OLLAMA_MODEL")
     for l in spec:
         l["estado"] = "analizando"
     avisar("El agente del Claude Agent SDK empieza a consultar los datos")
     t = time.time()
-    with tempfile.TemporaryDirectory(prefix="claude_sdk_") as cwd:  # copias saneadas; se borran al salir
+    with tempfile.TemporaryDirectory(prefix="claude_sdk_") as raiz:  # copias saneadas y config vacía; se borran al salir
+        cwd, config_dir = os.path.join(raiz, "datos"), os.path.join(raiz, "config")
+        os.makedirs(cwd), os.makedirs(config_dir)
         rutas = _copias_saneadas(cwd)
-        opciones = _opciones(clave, modelo, cwd, rutas.values())
+        opciones = _opciones(url, token, modelo, cwd, rutas.values(), config_dir)
         texto, res = asyncio.run(_ejecutar(_mensaje_usuario(claim, policy, rutas, spec), opciones, avisar))
     seg = round(res.duration_ms / 1000 if res and res.duration_ms else time.time() - t, 2)
     if res is None:
@@ -200,7 +215,5 @@ def correr(spec, claim, policy, clauses, llm, med, avisar, motor, modelo):
             l["referencia"] = l["regla"]()[0]
     avisar("Líneas marcadas")
     veredicto = agent._ajustar_veredicto(claim, spec, j)
-    info = {"tipo": "claude", "modelo": modelo, "framework": f"claude-agent-sdk {_version_sdk}"}
-    if res.total_cost_usd is not None:
-        info["total_cost_usd"] = res.total_cost_usd
+    info = {"tipo": "ollama", "modelo": modelo, "framework": f"claude-agent-sdk {_version_sdk}"}
     return veredicto, info, [{"id": "(todas)", "seg": seg}], 0.0

@@ -153,13 +153,11 @@ def start_review(claim_id):
         return jsonify({"error": "Indica una arquitectura válida: " + ", ".join(agent.ARQUITECTURAS)}), 400
     opts = {"arquitectura": arq}
     modelo = body.get("modelo")
-    if modelo and arq != "claude_sdk":
+    if modelo:
         if modelo not in agent.listar_modelos() and modelo != cfg.opcional("OLLAMA_MODEL"):
             return jsonify({"error": "modelo no disponible"}), 400
         opts["modelo"] = modelo
-    if arq == "claude_sdk":
-        opts["motor"] = "claude"  # solo Claude: ignora el modelo de Ollama elegido
-    elif body.get("motor") in ("reglas", "ollama", "claude"):
+    if body.get("motor") in ("reglas", "ollama", "claude"):
         opts["motor"] = body["motor"]
     elif arq in agent.ARQ_EXTERNAS:
         opts["motor"] = "ollama"  # LangGraph y Pydantic AI usan el LLM de Ollama

@@ -167,11 +167,13 @@ El agente decide solo con los hechos del caso, la póliza y las cláusulas: no v
 |---|---|---|
 | **LangGraph** | Un grafo con un nodo por requisito y otro de veredicto. Las líneas se analizan en paralelo (`LANGGRAPH_CONCURRENCIA`) y se marcan en vivo | Ollama o Claude |
 | **Pydantic AI** | Una sola consulta con salida tipada (modelos Pydantic) y reintento si no valida | Ollama |
-| **Claude Agent SDK** | El agente no recibe los datos: los consulta él con Read y Grep en copias saneadas (sin campos de resultado), confinado a una carpeta temporal | Claude (exige `ANTHROPIC_API_KEY`) |
+| **Claude Agent SDK** | El agente no recibe los datos: los consulta él con Read y Grep en copias saneadas (sin campos de resultado), confinado a una carpeta temporal | El mismo LLM de Ollama (cualquiera de sus modelos); no necesita clave de Anthropic |
 
 Además hay dos arquitecturas propias como línea base: `lineas` (una consulta por línea y otra para el veredicto) y `una_llamada` (una sola consulta). Se ejecutan desde un desplegable de la ficha o con `bench.py`.
 
-Si una tecnología no puede correr (falta la clave, el paquete o el servidor), cae al revisor por reglas, queda anotado como «No disponible» y no se mezcla con las métricas de las demás.
+El servidor Ollama acepta el protocolo de mensajes de Anthropic, así que el SDK (cuyo CLI se apunta a `OLLAMA_URL` con el token de Ollama) habla con el mismo modelo que las otras dos. Su proceso queda aislado: carpeta de configuración vacía (sin sesión, ajustes ni plugins del usuario), credenciales de Claude vacías, tráfico no esencial desactivado, y el selector de modelo de la ficha aplica a las tres tecnologías.
+
+Si una tecnología no puede correr (falta el paquete o el servidor), cae al revisor por reglas, queda anotado como «No disponible» y no se mezcla con las métricas de las demás.
 
 El LLM no tiene por qué respetar el esquema JSON que se le pide (con algunos modelos, el servidor lo ignora), así que las respuestas se interpretan de forma tolerante y el veredicto se ajusta si contradice las líneas marcadas.
 
@@ -207,7 +209,7 @@ Todo valor variable está en el `.env`; `.env.example` lista todas las variables
 | Datos | `MAX_RECLAMACIONES` (tope de reclamaciones que carga la app) |
 | Reglas del agente | `IMPORTE_ALTO_VALIDAR`, `PLAZO_RECLAMACION_DIAS` |
 | Agente | `AGENT_MODE`, `AGENT_ARCH`, `AGENT_STEP_DELAY`, `AGENT_USER_AGENT` |
-| Las 3 tecnologías | `LANGGRAPH_CONCURRENCIA`, `PYDANTIC_REINTENTOS`, `PYDANTIC_AI_NO_BANNER`, `CLAUDE_SDK_MAX_TURNOS`, `CLAUDE_SDK_HERRAMIENTAS` |
+| Las 3 tecnologías | `LANGGRAPH_CONCURRENCIA`, `PYDANTIC_REINTENTOS`, `PYDANTIC_AI_NO_BANNER`, `CLAUDE_SDK_MAX_TURNOS`, `CLAUDE_SDK_HERRAMIENTAS` (el SDK usa `OLLAMA_*`) |
 | Ollama (si `AGENT_MODE=ollama`) | `OLLAMA_URL`, `OLLAMA_TOKEN`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT`, `OLLAMA_MODELS_TIMEOUT`, `OLLAMA_MODELS_CACHE_SEG`, `OLLAMA_TEMPERATURE`, `OLLAMA_REINTENTOS`, `OLLAMA_REINTENTO_SEG` |
 | Claude (si `AGENT_MODE=claude`) | `ANTHROPIC_API_KEY`, `AGENT_MODEL`, `AGENT_MAX_TOKENS` |
 | Benchmark | `BENCH_N`, `BENCH_SEMILLA`, `BENCH_MODELOS`, `BENCH_ARQ`, `BENCH_REPETICIONES`, `BENCH_STEP_DELAY` |
@@ -232,7 +234,7 @@ El push se valida **commit a commit**: un secreto añadido y borrado después si
 
 # 12. Pendiente y próximos pasos
 
-- Probar el modo `claude` con una clave real (aún no se ha ejecutado).
+- Probar el modo `claude` (API de Anthropic) con una clave real: no se ha ejecutado. Las tres tecnologías ya se han ejecutado con modelos de Ollama.
 - Correr `bench.py` con los modelos y arquitecturas a comparar.
 - Sustituir los datos ficticios, las cláusulas y los límites por los textos reales de las pólizas.
 - El botón «Proveedores» del menú es decorativo por ahora.

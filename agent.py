@@ -417,8 +417,8 @@ def revisar(claim, policy, clauses, on_progress=None, motor=None, modelo=None, a
     arq = arquitectura or cfg.get("AGENT_ARCH")
     if arq not in ARQUITECTURAS:
         arq = "lineas"
-    if arq == "claude_sdk":
-        motor, modelo = "claude", None  # el Claude Agent SDK solo habla con Claude: no vale el modelo de Ollama elegido
+    if arq == "claude_sdk" and motor == "claude":
+        motor = "ollama"  # el Claude Agent SDK usa el mismo LLM de Ollama que las demás tecnologías
     pausa = cfg.decimal("AGENT_STEP_DELAY")
     fallback = False
     try:

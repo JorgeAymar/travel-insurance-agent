@@ -50,14 +50,14 @@
     <div><h2>Revisión del agente</h2>
       <p class="muted">Elige la tecnología con la que ejecutar la revisión. El agente analiza la reclamación, la póliza y sus cláusulas y emite un veredicto:
         <b>Aprobado</b>, <b>Rechazado</b> o <b>Validar</b> (con un comentario del agente).</p></div>
-    {% if modelos %}<div class="agent-ctl"><label>Modelo (LangGraph y Pydantic AI)<select id="sel-modelo">
+    {% if modelos %}<div class="agent-ctl"><label>Modelo (las 3 tecnologías)<select id="sel-modelo">
       {% for m in modelos %}<option value="{{ m }}" {{ 'selected' if m == modelo_def }}>{{ m }}</option>{% endfor %}
     </select></label></div>{% endif %}
   </div>
   <div class="tec-btns">
     <button class="tec" data-arq="langgraph"><b>LangGraph</b><small>grafo de nodos, líneas en paralelo</small></button>
     <button class="tec" data-arq="pydantic_ai"><b>Pydantic AI</b><small>una consulta con salida tipada</small></button>
-    <button class="tec" data-arq="claude_sdk"><b>Claude Agent SDK</b><small>el agente lee los datos con herramientas · usa Claude</small></button>
+    <button class="tec" data-arq="claude_sdk"><b>Claude Agent SDK</b><small>el agente lee los datos con herramientas · mismo LLM de Ollama</small></button>
     <button class="primary" data-arq="todas">Ejecutar las 3 y comparar</button>
   </div>
   <details class="clause-box base-arq"><summary><b>Arquitecturas propias</b><span class="muted">línea base para comparar</span></summary>
