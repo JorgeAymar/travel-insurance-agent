@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}{{ c.id }}{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const card = document.getElementById('agente'), btn = document.getElementById('btn-revisar'), id = card.dataset.id;
+  const fase = document.getElementById('agent-fase'), ul = document.getElementById('agent-lines');
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function pintar(lineas) {
+    ul.innerHTML = lineas.map(k => `<li class="ln ln-${k.estado}"><span class="ico"></span><span class="txt">${esc(k.requisito)}<small class="d">${esc(k.detalle)}</small></span><span class="grp">${esc(k.grupo)}</span></li>`).join('');
+  }
+  async function poll() {
+    const r = await (await fetch('/api/revisiones/' + id)).json();
+    if (r.estado === 'en_proceso') {
+      if (r.lineas) pintar(r.lineas);
+      fase.hidden = false; fase.textContent = r.fase || 'Analizando…';
+      return setTimeout(poll, 600);
+    }
+    location.reload();
+  }
+  btn.addEventListener('click', async () => {
+    btn.disabled = true; btn.textContent = 'Revisando…'; fase.hidden = false; fase.textContent = 'Iniciando el análisis…'; ul.innerHTML = '';
+    document.querySelectorAll('.verdict, .vmotivo, .vcomment').forEach(e => e.remove());
+    const resp = await fetch('/reclamaciones/' + id + '/revision', {method: 'POST'});
+    if (resp.status === 202 || resp.status === 409) poll(); else { btn.disabled = false; btn.textContent = 'Reintentar'; fase.hidden = true; }
+  });
+  if (card.dataset.estado === 'en_proceso') poll();
+})();
+</script>
+{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ back }}">‹ Volver al listado</a> › <b>{{ c.id }}</b></div>
+<div class="head">
+  <div><h1>{{ c.tipoReclamacion }}</h1>
+    <p class="sub"><span class="mono">{{ c.id }}</span> · Ingresada el {{ c.fechaIngreso|fecha }} por {{ c.canal|lower }} · Gestor: {{ c.gestor }}</p></div>
+</div>
+
+<section class="card pad agent-card" id="agente" data-id="{{ c.id }}" data-estado="{{ review.estado if review else 'sin_revisar' }}">
+  <div class="agent-head">
+    <div><h2>Revisión del agente</h2>
+      <p class="muted">El agente analiza la reclamación, la póliza y sus cláusulas y emite un veredicto: <b>Aprobado</b>, <b>Rechazado</b> o <b>Validar</b>.
+        Modo: {{ {'claude': 'Claude', 'ollama': 'LLM (Ollama)', 'reglas': 'reglas de las cláusulas'}[agent_mode] }}.</p></div>
+    <button id="btn-revisar" class="primary" {{ 'disabled' if review and review.estado == 'en_proceso' }}>
+      {{ 'Revisando…' if review and review.estado == 'en_proceso' else ('Volver a revisar' if review and review.estado == 'completada' else 'Revisar con el agente') }}</button>
+  </div>
+  <p id="agent-fase" class="muted" {{ 'hidden' if not (review and review.estado == 'en_proceso') }}>{{ review.fase if review and review.fase else '⏳ Iniciando el análisis…' }}</p>
+  <ul id="agent-lines" class="docs lines">
+    {% if review and review.lineas %}{% for k in review.lineas %}<li class="ln ln-{{ k.estado }}"><span class="ico"></span><span class="txt">{{ k.requisito }}<small class="d">{{ k.detalle }}</small></span><span class="grp">{{ k.grupo }}</span></li>{% endfor %}{% endif %}
+  </ul>
+  {% if review and review.estado == 'completada' %}
+    <div class="verdict v-{{ review.veredicto }}"><span class="vlabel">Veredicto</span><b>{{ review.veredicto }}</b>
+      {% if review.importeAPagar is not none and review.veredicto == 'Aprobado' %}<span class="vamount">Importe a pagar: {{ review.importeAPagar|eur }}</span>{% endif %}</div>
+    <p class="vmotivo">{{ review.motivo }}</p>
+    {% if review.veredicto == 'Validar' %}
+      <label class="vcomment"><span>Comentario del agente</span><textarea readonly rows="4">{{ review.comentario }}</textarea></label>
+    {% endif %}
+    <p class="muted small">Revisado por {{ review.agente.tipo|capitalize ~ ' (' ~ review.agente.modelo ~ ')' if review.agente.modelo else 'el revisor por reglas' }} el {{ review.finalizada[:10]|fecha }} a las {{ review.finalizada[11:16] }} · {{ review.duracionSeg }} s{% if review.nota %} · {{ review.nota }}{% endif %}</p>
+  {% elif review and review.estado == 'error' %}
+    <p class="reject-box">La revisión falló: {{ review.error }}</p>
+  {% endif %}
+</section>
+
+<section class="kpis three">
+  <div class="kpi blue"><span>Importe reclamado</span><b>{{ c.importeReclamado|eur }}</b><small>{{ c.desglose|length }} conceptos</small></div>
+  <div class="kpi green"><span>Situación y % de pago</span><b>{{ c.situacion.porcentaje }} %</b><small>{{ c.situacion.nombre }}</small></div>
+  <div class="kpi navy"><span>Abierto por el cliente</span><b>{{ 'Sí' if c.casoAbiertoPorCliente else 'No' }}</b><small>Canal: {{ c.canal }}</small></div>
+</section>
+
+<section class="card pad glosa">
+  <h2>Glosa de la reclamación</h2>
+  {% for p in c.glosa %}<p{% if p.startswith('Declaración') %} class="decl"{% endif %}>{{ p }}</p>{% endfor %}
+</section>
+
+<section class="five w">
+  <div class="fact"><span>Quién</span><p>{{ c.hechos.quien }}</p></div>
+  <div class="fact"><span>Qué</span><p>{{ c.hechos.que }}</p></div>
+  <div class="fact"><span>Cuándo</span><p>{{ c.hechos.cuando }}</p></div>
+  <div class="fact"><span>Dónde</span><p>{{ c.hechos.donde }}</p></div>
+  <div class="fact"><span>Cómo se gestionó</span><p>{{ c.hechos.como }}</p></div>
+  <div class="fact"><span>Cuánto</span><p>{{ c.hechos.cuanto }}</p></div>
+</section>
+
+<div class="grid2">
+  <div>
+    <section class="card pad"><h2>Desglose del importe reclamado</h2>
+      <table class="mini"><tbody>
+        {% for d in c.desglose %}<tr><td>{{ d.concepto }}</td><td class="num mono">{{ d.importe|eur }}</td></tr>{% endfor %}
+        <tr class="total"><td>Total reclamado</td><td class="num mono">{{ c.importeReclamado|eur }}</td></tr>
+        <tr><td class="muted">Límite de cobertura ({{ c.cobertura.nombre }})</td><td class="num mono muted">{{ c.cobertura.limite|eur }}</td></tr>
+        <tr><td class="muted">Franquicia</td><td class="num mono muted">{{ c.cobertura.franquicia|eur }}</td></tr>
+      </tbody></table>
+    </section>
+    <section class="card pad"><h2>Cláusula aplicable{% if clause %} · {{ clause.codigo }}{% endif %}</h2>
+      {% if clause %}
+        <p><b>{{ clause.titulo }}</b></p><p class="clause">{{ clause.texto }}</p>
+        {% if clause.requisitos %}<h3>Qué debe cumplirse para que el seguro pague</h3><ol class="plain">{% for r in clause.requisitos %}<li>{{ r }}</li>{% endfor %}</ol>{% endif %}
+        {% if clause.porcentajes %}<h3>% de pago según la situación</h3>
+        <table class="mini pct"><tbody>{% for x in clause.porcentajes %}
+          <tr class="{{ 'hit' if x.situacion == c.situacion.nombre }}"><td>{{ x.situacion }}<small class="d">{{ x.condicion }}</small></td><td class="num mono">{{ x.porcentaje }} %</td></tr>{% endfor %}</tbody></table>{% endif %}
+        {% if clause.exclusiones %}<h3>Exclusiones</h3><ul class="plain">{% for e in clause.exclusiones %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        <p class="muted">Plazo de reclamación: {{ clause.plazoReclamacionDias }} días · Límite {{ c.cobertura.limite|eur }} · Franquicia {{ c.cobertura.franquicia|eur }}.
+          <a href="{{ url_for('policy_detail', numero=c.numeroPoliza) }}">Ver póliza y todas sus cláusulas</a></p>
+      {% else %}<p class="reject-box">La cobertura «{{ c.cobertura.nombre }}» <b>no está incluida</b> en el plan {{ c.planPoliza }} de esta póliza.</p>{% endif %}
+    </section>
+    <section class="card pad"><h2>Historial</h2>
+      <ol class="timeline">{% for h in c.historial|reverse if not (h.evento.startswith("Resolución") or h.evento == "En revisión") %}
+        <li><b>{{ h.evento }}</b><small>{{ h.fecha|fecha }}</small><p>{{ h.detalle }}</p></li>{% endfor %}</ol>
+    </section>
+  </div>
+  <div>
+    <section class="card pad"><h2>Cliente</h2><dl>
+      <dt>Nombre</dt><dd>{{ c.nombreCliente }}</dd><dt>DNI</dt><dd class="mono">{{ c.dniCliente }}</dd>
+      <dt>Email</dt><dd>{{ c.email }}</dd><dt>Teléfono</dt><dd>{{ c.telefono }}</dd>
+      <dt>Acompañantes</dt><dd>{{ c.acompanantes|join(', ') if c.acompanantes else 'Viaja solo/a' }}</dd></dl></section>
+    <section class="card pad"><h2>Suceso</h2><dl>
+      <dt>Fecha y hora</dt><dd>{{ c.incidente.fecha|fecha }}, {{ c.incidente.hora }} h</dd>
+      <dt>Lugar</dt><dd>{{ c.incidente.lugar }}</dd><dt>Ciudad / país</dt><dd>{{ c.incidente.ciudad }}, {{ c.incidente.pais }}</dd>
+      <dt>Referencia oficial</dt><dd class="mono">{{ c.incidente.referenciaOficial or '—' }}</dd></dl></section>
+    <section class="card pad"><h2>Póliza y viaje</h2><dl>
+      <dt>Póliza</dt><dd class="mono"><a href="{{ url_for('policy_detail', numero=c.numeroPoliza) }}">{{ c.numeroPoliza }}</a></dd><dt>Plan</dt><dd>{{ c.planPoliza }}</dd><dt>Pagos</dt><dd>{% if policy %}<span class="tag {{ 'yes' if policy.pagosAlDia else 'no' }}">{{ 'Al día' if policy.pagosAlDia else 'Pendientes' }}</span> {{ policy.primaPagada|eur }} de {{ policy.prima|eur }} pagados{% else %}—{% endif %}</dd><dt>Cobertura</dt><dd>{{ c.cobertura.nombre }}</dd>
+      <dt>Inicio del viaje</dt><dd>{{ c.fechaInicioViaje|fecha }}</dd><dt>Fin del viaje</dt><dd>{{ c.fechaFinViaje|fecha }}</dd>
+      <dt>Últ. actualización</dt><dd>{{ c.ultimaActualizacion|fecha }}</dd></dl></section>
+    {% if policy %}<section class="card pad"><h2>Pagos de la póliza</h2>
+      <table class="mini"><tbody>{% for q in policy.pagos %}
+        <tr><td>Cuota {{ q.cuota }} · {{ q.fecha|fecha }}<small class="d">{{ q.metodo }} · {{ q.referencia }}</small></td>
+        <td class="num mono">{{ q.importe|eur }}</td><td><span class="tag {{ 'yes' if q.estado == 'Pagado' else 'no' }}">{{ q.estado }}</span></td></tr>{% endfor %}
+        <tr class="total"><td>Prima total</td><td class="num mono">{{ policy.prima|eur }}</td><td></td></tr></tbody></table></section>{% endif %}
+    <section class="card pad"><h2>Terceros implicados</h2><dl>
+      {% for t in c.terceros %}<dt>{{ t.rol }}</dt><dd>{{ t.nombre }}</dd>{% endfor %}</dl></section>
+    <section class="card pad"><h2>Documentación</h2><ul class="docs">
+      {% for d in c.documentos %}<li class="{{ 'ok' if d.recibido else 'miss' }}"><span>{{ '✓' if d.recibido else '○' }} {{ d.nombre }}</span><small>{{ 'Recibido' if d.recibido else 'Pendiente' }}</small></li>{% endfor %}</ul></section>
+  </div>
+</div>
+{% endblock %}

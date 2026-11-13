@@ -1,0 +1,659 @@
+[
+  {
+    "codigo": "C-01",
+    "categoria": "transporte",
+    "titulo": "Retrasos, cancelaciones y denegación de embarque",
+    "texto": "Se reembolsan los gastos razonables y justificados de alojamiento, comidas, traslados y comunicaciones cuando el medio de transporte sufra un retraso superior a 4 horas, una cancelación o una denegación de embarque, siempre que el transportista no haya prestado la asistencia debida. El asegurado debe obtener el certificado del transportista.",
+    "exclusiones": [
+      "Retrasos anunciados antes de contratar la póliza",
+      "Huelgas conocidas en la fecha de contratación"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Billetes / reserva",
+      "Certificado de retraso o cancelación de la aerolínea",
+      "Facturas originales",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Certificado del transportista que acredite el retraso, la cancelación o la denegación de embarque",
+      "Billete o reserva a nombre del asegurado",
+      "Facturas originales de los gastos realizados durante la espera",
+      "Haber reclamado antes al transportista y no haber recibido asistencia suficiente"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Retraso inferior a 4 horas",
+        "porcentaje": 0,
+        "condicion": "No da derecho a compensación."
+      },
+      {
+        "situacion": "Retraso de 4 a 8 horas",
+        "porcentaje": 60,
+        "condicion": "Gastos justificados de comidas, traslados y comunicaciones."
+      },
+      {
+        "situacion": "Retraso superior a 8 horas",
+        "porcentaje": 100,
+        "condicion": "Gastos justificados, incluido el alojamiento."
+      },
+      {
+        "situacion": "Pérdida de conexión por retraso del tramo previo",
+        "porcentaje": 80,
+        "condicion": "Billetes y gastos de espera hasta la siguiente salida."
+      },
+      {
+        "situacion": "Denegación de embarque por sobreventa",
+        "porcentaje": 100,
+        "condicion": "Gastos adicionales no compensados por el transportista."
+      }
+    ]
+  },
+  {
+    "codigo": "C-02",
+    "categoria": "equipaje",
+    "titulo": "Pérdida, daño y retraso de equipaje",
+    "texto": "Se indemniza la pérdida definitiva o el daño del equipaje facturado, con depreciación por antigüedad, y los gastos de primera necesidad si el equipaje se retrasa más de 6 horas. Es obligatorio presentar el parte de irregularidad (PIR) en el aeropuerto antes de abandonar la terminal.",
+    "exclusiones": [
+      "Equipaje sin facturar y dejado sin vigilancia",
+      "Joyas, dinero y documentos dentro de maletas facturadas",
+      "Daños por desgaste normal"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Parte de irregularidad de equipaje (PIR)",
+      "Facturas de compra / valoración",
+      "Billetes y etiquetas de equipaje",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Parte de irregularidad (PIR) presentado en el aeropuerto antes de salir de la terminal",
+      "Etiquetas de facturación del equipaje",
+      "Facturas o prueba de valor de los objetos (se aplica depreciación por antigüedad)",
+      "Equipaje facturado y bajo custodia del transportista"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Pérdida definitiva del equipaje facturado",
+        "porcentaje": 100,
+        "condicion": "Valor real de los objetos con depreciación por antigüedad."
+      },
+      {
+        "situacion": "Daño parcial del equipaje",
+        "porcentaje": 70,
+        "condicion": "Reparación o valor de los objetos dañados."
+      },
+      {
+        "situacion": "Retraso de equipaje inferior a 6 horas",
+        "porcentaje": 0,
+        "condicion": "No da derecho a compensación."
+      },
+      {
+        "situacion": "Retraso de equipaje de 6 a 24 horas",
+        "porcentaje": 50,
+        "condicion": "Gastos de primera necesidad justificados."
+      },
+      {
+        "situacion": "Retraso de equipaje superior a 24 horas",
+        "porcentaje": 100,
+        "condicion": "Gastos de primera necesidad justificados."
+      },
+      {
+        "situacion": "Pérdida de equipo deportivo",
+        "porcentaje": 80,
+        "condicion": "Valor del equipo con depreciación."
+      }
+    ]
+  },
+  {
+    "codigo": "C-03",
+    "categoria": "robo",
+    "titulo": "Robo y pérdida de efectos personales",
+    "texto": "Se indemniza el robo con violencia o intimidación y el hurto de efectos personales siempre que haya denuncia presentada en las 24 horas siguientes ante la autoridad local. Se aplica depreciación por antigüedad y un sublímite por objeto.",
+    "exclusiones": [
+      "Pérdida simple o extravío sin denuncia",
+      "Robo en vehículo sin signos de fuerza",
+      "Dinero en efectivo superior a 300 €"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Denuncia policial",
+      "Listado y valoración de objetos",
+      "Facturas originales",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Denuncia ante la autoridad local en las 24 horas siguientes al suceso",
+      "Relación valorada de los objetos sustraídos",
+      "Facturas o prueba de propiedad",
+      "Los objetos estaban bajo vigilancia razonable del asegurado"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Robo o hurto con denuncia en 24 horas",
+        "porcentaje": 80,
+        "condicion": "Valor de los objetos con depreciación."
+      },
+      {
+        "situacion": "Robo de dinero en efectivo",
+        "porcentaje": 50,
+        "condicion": "Hasta un máximo de 300 € de efectivo."
+      }
+    ]
+  },
+  {
+    "codigo": "C-04",
+    "categoria": "documentos",
+    "titulo": "Documentación personal",
+    "texto": "Se reembolsan las tasas y gastos de gestión para obtener documentos de identidad o de viaje provisionales en caso de robo o pérdida, incluyendo traslados al consulado y una noche adicional de alojamiento cuando sea necesaria.",
+    "exclusiones": [
+      "Documentos caducados o no válidos para el viaje",
+      "Multas o sanciones administrativas"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Denuncia policial",
+      "Documento provisional del consulado",
+      "Facturas originales",
+      "Formulario de reclamación"
+    ],
+    "requisitos": [
+      "Denuncia ante la autoridad local",
+      "Documento provisional del consulado o de la autoridad competente",
+      "Facturas de las tasas y gastos de gestión",
+      "El documento era válido y necesario para el viaje"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Robo o pérdida de documentos con denuncia",
+        "porcentaje": 100,
+        "condicion": "Tasas, gestión y traslados al consulado."
+      },
+      {
+        "situacion": "Pérdida de llaves",
+        "porcentaje": 70,
+        "condicion": "Cerrajero y duplicado urgente."
+      }
+    ]
+  },
+  {
+    "codigo": "C-05",
+    "categoria": "medico",
+    "titulo": "Gastos médicos en el extranjero",
+    "texto": "Se cubren los gastos médicos, quirúrgicos, farmacéuticos y de hospitalización ocurridos durante el viaje a consecuencia de enfermedad o accidente sobrevenidos, hasta el límite indicado. La Central de Asistencia debe ser avisada en cuanto sea posible.",
+    "exclusiones": [
+      "Enfermedades preexistentes o crónicas sin descompensación aguda",
+      "Tratamientos estéticos o programados",
+      "Embarazo a partir de la semana 28"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Informe médico",
+      "Facturas del centro médico",
+      "Recetas y justificantes de farmacia",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Aviso a la Central de Asistencia lo antes posible (máximo 48 h en ingresos)",
+      "Informe médico con diagnóstico y tratamiento",
+      "Facturas originales del centro médico y recetas",
+      "La dolencia es sobrevenida y no preexistente (salvo descompensación aguda)"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Gastos médicos por enfermedad o accidente sobrevenidos",
+        "porcentaje": 100,
+        "condicion": "Asistencia, pruebas, medicación y hospitalización."
+      },
+      {
+        "situacion": "Asistencia dental urgente",
+        "porcentaje": 60,
+        "condicion": "Solo tratamiento urgente del dolor o la infección."
+      },
+      {
+        "situacion": "Descompensación aguda de enfermedad preexistente",
+        "porcentaje": 50,
+        "condicion": "Solo la fase aguda, no el tratamiento de la enfermedad."
+      },
+      {
+        "situacion": "Gastos de acompañante por hospitalización",
+        "porcentaje": 80,
+        "condicion": "Alojamiento y desplazamiento de un familiar."
+      }
+    ]
+  },
+  {
+    "codigo": "C-06",
+    "categoria": "repatriacion",
+    "titulo": "Repatriación y evacuación",
+    "texto": "Se organiza y se asume el traslado sanitario del asegurado, o de los restos mortales, hasta su domicilio o centro hospitalario de referencia cuando lo determine el equipo médico de la aseguradora. Es imprescindible la autorización previa de la Central de Asistencia.",
+    "exclusiones": [
+      "Traslados no autorizados previamente",
+      "Evacuaciones por motivos de comodidad"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Informe médico",
+      "Autorización de traslado",
+      "Facturas del transporte sanitario",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Autorización previa de la Central de Asistencia",
+      "Informe del equipo médico que determine la necesidad del traslado",
+      "Facturas del transporte sanitario",
+      "Documentación consular y sanitaria exigida por el país"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Repatriación o evacuación con autorización previa",
+        "porcentaje": 100,
+        "condicion": "Traslado sanitario o de restos mortales autorizado por la Central."
+      }
+    ]
+  },
+  {
+    "codigo": "C-07",
+    "categoria": "accidente",
+    "titulo": "Accidentes personales",
+    "texto": "Se garantiza el pago de las prestaciones por fallecimiento, invalidez permanente o gastos de asistencia cuando el asegurado sufra un accidente durante el viaje. La invalidez se valora según el baremo contratado, una vez estabilizadas las secuelas.",
+    "exclusiones": [
+      "Deportes de riesgo no declarados",
+      "Accidentes bajo los efectos del alcohol o las drogas",
+      "Participación en competiciones"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Atestado / parte del accidente",
+      "Informe médico",
+      "Facturas originales",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Atestado, parte del accidente o informe de la autoridad",
+      "Informe médico con el diagnóstico y el pronóstico",
+      "Prueba de que la actividad estaba declarada en la póliza",
+      "El asegurado no estaba bajo los efectos del alcohol o las drogas"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Gastos de asistencia por accidente",
+        "porcentaje": 100,
+        "condicion": "Atención médica y rehabilitación."
+      },
+      {
+        "situacion": "Accidente durante actividad deportiva declarada",
+        "porcentaje": 80,
+        "condicion": "Asistencia y rehabilitación."
+      },
+      {
+        "situacion": "Fallecimiento accidental",
+        "porcentaje": 100,
+        "condicion": "Capital contratado para los beneficiarios."
+      },
+      {
+        "situacion": "Invalidez permanente parcial",
+        "porcentaje": 70,
+        "condicion": "Según baremo, tras la estabilización de las secuelas."
+      }
+    ]
+  },
+  {
+    "codigo": "C-08",
+    "categoria": "responsabilidad",
+    "titulo": "Responsabilidad civil y daños a terceros",
+    "texto": "Se cubren las indemnizaciones que el asegurado deba pagar a terceros por daños materiales o personales causados involuntariamente durante el viaje, así como los gastos de defensa. El asegurado no debe reconocer responsabilidad ni acordar pagos sin autorización.",
+    "exclusiones": [
+      "Daños dolosos",
+      "Daños a bienes que el asegurado posea o alquile bajo contrato de larga duración",
+      "Responsabilidad profesional"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Parte amistoso o informe del daño",
+      "Presupuesto o factura de reparación",
+      "Contrato de alquiler / reserva",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Parte del daño firmado por las partes o informe de la autoridad",
+      "Presupuesto o factura de reparación",
+      "No reconocer responsabilidad ni pactar pagos sin autorización de la aseguradora",
+      "Daño causado de forma involuntaria"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Responsabilidad civil frente a terceros",
+        "porcentaje": 100,
+        "condicion": "Indemnización al perjudicado y gastos de defensa."
+      },
+      {
+        "situacion": "Daños en el alojamiento",
+        "porcentaje": 80,
+        "condicion": "Reparación facturada por el alojamiento."
+      },
+      {
+        "situacion": "Daños en vehículo de alquiler (franquicia)",
+        "porcentaje": 100,
+        "condicion": "Franquicia y cargos del contrato de alquiler."
+      },
+      {
+        "situacion": "Robo del vehículo de alquiler",
+        "porcentaje": 70,
+        "condicion": "Franquicia y gastos no cubiertos por el alquiler."
+      }
+    ]
+  },
+  {
+    "codigo": "C-09",
+    "categoria": "cancelacion",
+    "titulo": "Cancelación y regreso anticipado",
+    "texto": "Se reembolsan los gastos no recuperables de viaje cuando el asegurado deba cancelarlo, o interrumpirlo, por una causa grave, sobrevenida e imprevisible posterior a la contratación: enfermedad grave, fallecimiento de familiares de primer grado, despido, citación judicial, entre otras. La causa debe acreditarse documentalmente.",
+    "exclusiones": [
+      "Causas conocidas antes de contratar",
+      "Cambios de opinión o de planes",
+      "Enfermedades preexistentes sin agravamiento imprevisible"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Justificante de la causa de cancelación",
+      "Billetes / reserva",
+      "Facturas de cancelación",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "La causa es grave, sobrevenida e imprevisible y posterior a la contratación",
+      "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+      "Cancelación comunicada a la agencia y a los proveedores el mismo día de la causa",
+      "Facturas de cancelación y servicios no reembolsables"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Cancelación por causa grave documentada",
+        "porcentaje": 100,
+        "condicion": "Gastos no recuperables del viaje."
+      },
+      {
+        "situacion": "Interrupción del viaje",
+        "porcentaje": 80,
+        "condicion": "Servicios no disfrutados desde el regreso."
+      },
+      {
+        "situacion": "Cancelación por causa laboral (despido)",
+        "porcentaje": 90,
+        "condicion": "Gastos no recuperables del viaje."
+      },
+      {
+        "situacion": "Regreso anticipado por motivo grave",
+        "porcentaje": 100,
+        "condicion": "Billetes de regreso y servicios no disfrutados."
+      }
+    ]
+  },
+  {
+    "codigo": "C-10",
+    "categoria": "externo",
+    "titulo": "Eventos de fuerza mayor",
+    "texto": "Se cubren los gastos adicionales de alojamiento, transporte y manutención derivados de huelgas, desastres naturales, disturbios, cierres de espacio aéreo o cuarentenas impuestas por la autoridad que impidan continuar el viaje según lo previsto.",
+    "exclusiones": [
+      "Hechos previsibles o anunciados antes de la contratación",
+      "Guerras declaradas",
+      "Desastres en zonas con alerta oficial previa"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Comunicado oficial del suceso",
+      "Billetes / reserva",
+      "Facturas originales",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Comunicado oficial o prueba del suceso (autoridad, aeropuerto, operador)",
+      "El suceso no era conocido ni anunciado al contratar",
+      "Facturas originales de los gastos adicionales",
+      "Haber seguido las instrucciones de las autoridades"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Huelga o disturbios civiles",
+        "porcentaje": 70,
+        "condicion": "Gastos adicionales de alojamiento y transporte."
+      },
+      {
+        "situacion": "Desastre natural",
+        "porcentaje": 100,
+        "condicion": "Alojamiento, transporte y manutención adicionales."
+      },
+      {
+        "situacion": "Cierre de espacio aéreo",
+        "porcentaje": 100,
+        "condicion": "Gastos de espera y reubicación."
+      },
+      {
+        "situacion": "Cuarentena obligatoria o contagio impeditivo",
+        "porcentaje": 90,
+        "condicion": "Alojamiento y regreso modificado."
+      },
+      {
+        "situacion": "Retención del medio de transporte",
+        "porcentaje": 100,
+        "condicion": "Gastos adicionales justificados."
+      }
+    ]
+  },
+  {
+    "codigo": "C-11",
+    "categoria": "legal",
+    "titulo": "Defensa jurídica y fianzas",
+    "texto": "Se cubren los honorarios de abogado y procurador y se adelanta la fianza penal exigida por las autoridades locales por hechos accidentales ocurridos durante el viaje. El importe adelantado debe devolverse a la aseguradora al ser liberado.",
+    "exclusiones": [
+      "Delitos dolosos",
+      "Conflictos con el tomador o con la propia aseguradora",
+      "Infracciones administrativas"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Documentación judicial",
+      "Minuta del abogado",
+      "Justificante de fianza",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Documentación judicial del procedimiento",
+      "Los hechos son accidentales y no dolosos",
+      "Minuta del abogado y justificante de fianza o tasas",
+      "Compromiso de devolución de la fianza adelantada"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Defensa jurídica por hechos accidentales",
+        "porcentaje": 100,
+        "condicion": "Honorarios, tasas y traducciones."
+      },
+      {
+        "situacion": "Adelanto de fianza",
+        "porcentaje": 100,
+        "condicion": "Anticipo reintegrable por el asegurado."
+      }
+    ]
+  },
+  {
+    "codigo": "C-12",
+    "categoria": "electronico",
+    "titulo": "Equipos electrónicos",
+    "texto": "Se indemniza el robo o el daño accidental de teléfonos, ordenadores portátiles, cámaras y equipos electrónicos de uso personal, con depreciación por antigüedad, siempre que haya denuncia o informe técnico del daño.",
+    "exclusiones": [
+      "Daños por mal uso o desgaste",
+      "Pérdida simple",
+      "Equipos dejados sin vigilancia en lugares públicos"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Denuncia policial",
+      "Factura de compra del equipo",
+      "Informe técnico de daños",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Denuncia policial (robo) o informe técnico del daño",
+      "Factura de compra del equipo (se aplica depreciación)",
+      "El equipo no se dejó sin vigilancia en lugar público",
+      "Número de serie / identificador del equipo"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Robo de equipo electrónico con denuncia",
+        "porcentaje": 80,
+        "condicion": "Valor con depreciación."
+      },
+      {
+        "situacion": "Daño accidental de equipo electrónico",
+        "porcentaje": 60,
+        "condicion": "Reparación o valor con depreciación."
+      }
+    ]
+  },
+  {
+    "codigo": "C-13",
+    "categoria": "prepago",
+    "titulo": "Servicios prepagados e insolvencia",
+    "texto": "Se reembolsan los servicios turísticos prepagados no prestados por causa ajena al asegurado, incluida la insolvencia o quiebra del proveedor, y los gastos de alternativas necesarias para continuar el viaje.",
+    "exclusiones": [
+      "Cancelaciones por voluntad del asegurado",
+      "Servicios no contratados a través de proveedor autorizado"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [
+      "Contrato y justificante de pago",
+      "Comunicación del operador",
+      "Facturas originales",
+      "Formulario de reclamación",
+      "Copia de la póliza"
+    ],
+    "requisitos": [
+      "Contrato y justificante de pago del servicio prepagado",
+      "Comunicación del operador de que no se presta o de la cancelación",
+      "Reclamación previa al proveedor sin reembolso",
+      "Facturas de las alternativas contratadas"
+    ],
+    "porcentajes": [
+      {
+        "situacion": "Servicio prepagado no prestado",
+        "porcentaje": 100,
+        "condicion": "Importe del servicio no prestado."
+      },
+      {
+        "situacion": "Cancelación del servicio por el proveedor",
+        "porcentaje": 80,
+        "condicion": "Importe no compensado por el proveedor."
+      },
+      {
+        "situacion": "Insolvencia del proveedor",
+        "porcentaje": 100,
+        "condicion": "Importe del servicio no disfrutado."
+      }
+    ]
+  },
+  {
+    "codigo": "G-07",
+    "categoria": "general",
+    "titulo": "Requisitos generales para que el seguro pague",
+    "texto": "Para que la aseguradora abone una reclamación deben cumplirse todos los requisitos siguientes. Si falla alguno, la reclamación se rechaza o queda en suspenso hasta su subsanación. El importe a pagar es el gasto justificado multiplicado por el porcentaje de la situación, con el tope del límite de la cobertura y descontada la franquicia.",
+    "exclusiones": [],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [],
+    "requisitos": [
+      "La póliza está registrada y en vigor en la fecha del suceso (entre la fecha de contratación y el fin del viaje).",
+      "La prima está al día: ninguna cuota vencida estaba impagada en la fecha del suceso.",
+      "La cobertura reclamada está incluida en el plan contratado (Básico, Estándar o Premium).",
+      "El suceso ocurre dentro del viaje asegurado y no está incluido en las exclusiones de la cláusula ni en las exclusiones generales.",
+      "El suceso se comunica en un máximo de 7 días y la reclamación se presenta en un máximo de 30 días desde el suceso.",
+      "Se aporta toda la documentación original exigida por la cláusula de la cobertura.",
+      "El pago se calcula así: gasto justificado × % de la situación → tope del límite de cobertura → menos la franquicia."
+    ],
+    "porcentajes": []
+  },
+  {
+    "codigo": "G-01",
+    "categoria": "general",
+    "titulo": "Objeto y ámbito territorial",
+    "texto": "La póliza garantiza al asegurado, durante las fechas del viaje indicado en las condiciones particulares y en el destino contratado, las coberturas incluidas en su plan. La cobertura comienza a las 00:00 del día de salida y termina a las 24:00 del día de regreso.",
+    "exclusiones": [],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [],
+    "requisitos": [],
+    "porcentajes": []
+  },
+  {
+    "codigo": "G-02",
+    "categoria": "general",
+    "titulo": "Obligaciones del asegurado ante un siniestro",
+    "texto": "El asegurado debe comunicar el siniestro en un plazo máximo de 7 días desde que lo conozca y presentar la reclamación con la documentación requerida dentro de los 30 días siguientes al suceso, conservando todos los justificantes originales.",
+    "exclusiones": [],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [],
+    "requisitos": [],
+    "porcentajes": []
+  },
+  {
+    "codigo": "G-03",
+    "categoria": "general",
+    "titulo": "Exclusiones generales",
+    "texto": "Quedan excluidos los siniestros causados por dolo o mala fe del asegurado, los derivados de guerras, actos terroristas en zonas con alerta previa, radiaciones nucleares y las consecuencias de la práctica de deportes profesionales.",
+    "exclusiones": [
+      "Dolo o mala fe",
+      "Guerra y terrorismo declarado",
+      "Deportes profesionales"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [],
+    "requisitos": [],
+    "porcentajes": []
+  },
+  {
+    "codigo": "G-04",
+    "categoria": "general",
+    "titulo": "Franquicia, límites y reembolso",
+    "texto": "Los importes reembolsables no podrán superar el límite de cada cobertura ni el valor real de lo perdido; en cada siniestro se descontará la franquicia indicada. Los pagos se efectúan en un plazo máximo de 15 días desde la aceptación del siniestro.",
+    "exclusiones": [],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [],
+    "requisitos": [],
+    "porcentajes": []
+  },
+  {
+    "codigo": "G-06",
+    "categoria": "general",
+    "titulo": "Pago de la prima y suspensión de cobertura",
+    "texto": "El pago de la prima es condición para la vigencia de las coberturas. Si una cuota no se abona en su fecha de vencimiento, la cobertura queda suspendida desde ese día y la aseguradora no responde de los siniestros ocurridos durante la suspensión, aunque el pago se regularice después.",
+    "exclusiones": [
+      "Siniestros ocurridos con cuotas vencidas e impagadas"
+    ],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [],
+    "requisitos": [],
+    "porcentajes": []
+  },
+  {
+    "codigo": "G-05",
+    "categoria": "general",
+    "titulo": "Fraude y prescripción",
+    "texto": "La declaración falsa o la documentación manipulada libera a la aseguradora de toda prestación. Las acciones derivadas de la póliza prescriben a los dos años contados desde la fecha del siniestro.",
+    "exclusiones": [],
+    "plazoReclamacionDias": 30,
+    "documentosRequeridos": [],
+    "requisitos": [],
+    "porcentajes": []
+  }
+]

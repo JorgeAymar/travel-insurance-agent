@@ -1,0 +1,16 @@
+# Secretos y configuración local
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Resultados de ejecución del agente (se generan al pulsar «Revisar con el agente»)
+data/revisiones.json
+data/*.tmp
+
+# macOS / editores
+.DS_Store
+.idea/
+.vscode/

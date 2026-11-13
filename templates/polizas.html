@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Pólizas{% endblock %}
+{% block content %}
+<div class="crumbs">Inicio › Gestión de pólizas › <b>Pólizas</b></div>
+<h1>Pólizas de seguros de viaje</h1>
+<p class="sub">Pólizas registradas, estado de pago y cláusulas aplicables.</p>
+<form class="filters" method="get">
+  <input name="q" value="{{ q }}" placeholder="Buscar por póliza, tomador o DNI">
+  <select name="plan"><option value="">Todos los planes</option>{% for pl in planes %}<option {{ 'selected' if pl == plan }}>{{ pl }}</option>{% endfor %}</select>
+  <button class="primary">Filtrar</button><a class="ghost" href="{{ url_for('policies') }}">Limpiar</a>
+</form>
+<section class="card">
+  <div class="card-h"><b>Pólizas</b><span class="pill">{{ rows|length }} de {{ total }}</span></div>
+  <div class="scroll"><table style="min-width:1000px">
+    <thead><tr><th>Póliza</th><th>Tomador</th><th>Plan</th><th>Destino</th><th>Vigencia</th><th>Prima</th><th>Pagos</th><th>Estado</th><th class="num">Reclamaciones</th></tr></thead>
+    <tbody>{% for p in rows %}
+      <tr class="row" tabindex="0" data-href="{{ url_for('policy_detail', numero=p.numero) }}">
+        <td class="mono"><a href="{{ url_for('policy_detail', numero=p.numero) }}">{{ p.numero }}</a></td>
+        <td>{{ p.tomador.nombre }} {{ p.tomador.apellido1 }} {{ p.tomador.apellido2 }}<small class="d">{{ p.tomador.dni }}</small></td>
+        <td>{{ p.plan }}</td><td>{{ p.viaje.destino }}</td>
+        <td class="mono">{{ p.viaje.inicio|fecha }} → {{ p.viaje.fin|fecha }}</td>
+        <td class="num mono">{{ p.prima|eur }}</td>
+        <td><span class="tag {{ 'yes' if p.pagosAlDia else 'no' }}">{{ 'Al día' if p.pagosAlDia else 'Pendientes' }}</span></td>
+        <td><span class="badge s-{{ 'Aprobado' if p.estado == 'Vigente' else 'Cerrado' }}">{{ p.estado }}</span></td>
+        <td class="num">{{ n_claims.get(p.numero, 0) }}</td>
+      </tr>{% else %}<tr><td colspan="9" class="empty">Sin resultados.</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+<script>
+document.querySelectorAll('tr.row').forEach(r => {
+  r.addEventListener('click', e => { if (!e.target.closest('a')) location.href = r.dataset.href; });
+  r.addEventListener('keydown', e => { if (e.key === 'Enter') location.href = r.dataset.href; });
+});
+</script>
+{% endblock %}

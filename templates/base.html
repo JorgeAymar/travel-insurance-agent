@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Reclamaciones{% endblock %} · Portal de Siniestros</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">⛨</span><div><b>Portal de Siniestros</b><small>Seguros de viaje</small></div></div>
+  <nav><a class="{{ 'on' if request.endpoint in ('index', 'detail') }}" href="{{ url_for('index') }}">Reclamaciones</a><a class="{{ 'on' if request.endpoint in ('policies', 'policy_detail') }}" href="{{ url_for('policies') }}">Pólizas</a><a>Proveedores</a><a>Informes</a></nav>
+  <div class="user"><div><b>Mateo Ruiz</b><small>Gestor senior</small></div><span class="avatar">CM</span></div>
+</header>
+<main>{% block content %}{% endblock %}</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

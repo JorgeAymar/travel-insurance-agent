@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ p.numero }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('policies') }}">‹ Pólizas</a> › <b>{{ p.numero }}</b></div>
+<div class="head">
+  <div><h1>Póliza {{ p.numero }}</h1>
+    <p class="sub">Plan {{ p.plan }} · Contratada el {{ p.fechaContratacion|fecha }} · Viaje a {{ p.viaje.destino }} del {{ p.viaje.inicio|fecha }} al {{ p.viaje.fin|fecha }}</p></div>
+  <div><span class="tag {{ 'yes' if p.pagosAlDia else 'no' }} big">Pagos {{ 'al día' if p.pagosAlDia else 'pendientes' }}</span>
+       <span class="badge big s-{{ 'Aprobado' if p.estado == 'Vigente' else 'Cerrado' }}">{{ p.estado }}</span></div>
+</div>
+<section class="kpis three">
+  <div class="kpi blue"><span>Prima total</span><b>{{ p.prima|eur }}</b><small>{{ p.pagos|length }} cuota{{ 's' if p.pagos|length > 1 }}</small></div>
+  <div class="kpi green"><span>Prima pagada</span><b>{{ p.primaPagada|eur }}</b><small>Pendiente: {{ p.primaPendiente|eur }}</small></div>
+  <div class="kpi navy"><span>Reclamaciones</span><b>{{ claims|length }}</b><small>{{ p.coberturas|length }} coberturas contratadas</small></div>
+</section>
+<div class="grid2">
+  <div>
+    <section class="card pad req"><h2>Qué debe cumplirse para que el seguro pague</h2>
+      <p class="muted">Deben cumplirse <b>todos</b> los requisitos. Si falla alguno, la reclamación no se paga hasta subsanarlo.</p>
+      <ol class="plain strong">{% for r in req_general %}<li>{{ r }}</li>{% endfor %}</ol></section>
+    <section class="card pad"><h2>Coberturas, requisitos y % de pago</h2>
+      {% for k, cob, cl in coberturas %}
+      <details class="clause-box" open><summary><b>{{ cl.codigo if cl }} · {{ cob.nombre }}</b><span class="muted">límite {{ cob.limite|eur }} · franquicia {{ cob.franquicia|eur }}</span></summary>
+        {% if cl %}<p class="clause">{{ cl.texto }}</p>
+        {% if cl.requisitos %}<h3>Requisitos específicos</h3><ol class="plain">{% for r in cl.requisitos %}<li>{{ r }}</li>{% endfor %}</ol>{% endif %}
+        {% if cl.porcentajes %}<h3>% de pago según la situación</h3>
+        <table class="mini pct"><thead><tr><th>Situación</th><th>Qué se paga</th><th class="num">% de pago</th></tr></thead><tbody>
+          {% for x in cl.porcentajes %}<tr><td>{{ x.situacion }}</td><td class="muted">{{ x.condicion }}</td><td class="num mono"><b>{{ x.porcentaje }} %</b></td></tr>{% endfor %}</tbody></table>
+        <p class="muted">Sobre el importe resultante se aplica el límite de {{ cob.limite|eur }} y se descuenta la franquicia de {{ cob.franquicia|eur }}.</p>{% endif %}
+        {% if cl.exclusiones %}<h3>Exclusiones</h3><ul class="plain">{% for e in cl.exclusiones %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        <p class="muted">Plazo de reclamación: {{ cl.plazoReclamacionDias }} días. Documentación: {{ cl.documentosRequeridos|join(', ') }}.</p>{% endif %}
+      </details>{% endfor %}
+    </section>
+    <section class="card pad"><h2>Cláusulas generales</h2>
+      {% for g in generales %}<details class="clause-box"><summary><b>{{ g.codigo }} · {{ g.titulo }}</b></summary>
+        <p class="clause">{{ g.texto }}</p>{% if g.exclusiones %}<ul class="plain">{% for e in g.exclusiones %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</details>{% endfor %}
+    </section>
+  </div>
+  <div>
+    <section class="card pad"><h2>Tomador</h2><dl>
+      <dt>Nombre</dt><dd>{{ p.tomador.nombre }} {{ p.tomador.apellido1 }} {{ p.tomador.apellido2 }}</dd><dt>DNI</dt><dd class="mono">{{ p.tomador.dni }}</dd>
+      <dt>Email</dt><dd>{{ p.tomador.email }}</dd><dt>Teléfono</dt><dd>{{ p.tomador.telefono }}</dd>
+      <dt>Acompañantes</dt><dd>{{ p.acompanantes|join(', ') if p.acompanantes else 'Viaja solo/a' }}</dd></dl></section>
+    <section class="card pad"><h2>Pagos de la prima</h2>
+      <table class="mini"><tbody>{% for q in p.pagos %}
+        <tr><td>Cuota {{ q.cuota }} · {{ q.fecha|fecha }}<small class="d">{{ q.metodo }} · {{ q.referencia }}</small></td>
+        <td class="num mono">{{ q.importe|eur }}</td><td><span class="tag {{ 'yes' if q.estado == 'Pagado' else 'no' }}">{{ q.estado }}</span></td></tr>{% endfor %}
+        <tr class="total"><td>Total</td><td class="num mono">{{ p.prima|eur }}</td><td></td></tr></tbody></table></section>
+    <section class="card pad"><h2>Reclamaciones de esta póliza</h2>
+      {% if claims %}<ul class="docs">{% for c in claims %}<li><span><a href="{{ url_for('detail', claim_id=c.id) }}" class="mono">{{ c.id }}</a> · {{ c.tipoReclamacion }}</span></li>{% endfor %}</ul>{% else %}<p class="muted">Sin reclamaciones.</p>{% endif %}</section>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="crumbs">Inicio › Gestión de siniestros › <b>Reclamaciones</b></div>
+<h1>Reclamaciones de seguros de viaje</h1>
+<p class="sub">Gestión y tramitación de expedientes, asistencias y reembolsos.</p>
+
+<section class="kpis">
+  <div class="kpi navy"><span>Total reclamaciones</span><b>{{ kpis.total }}</b><small>{{ found }} coinciden con el filtro</small></div>
+  <div class="kpi blue"><span>Tipos de reclamación</span><b>{{ kpis.tipos }}</b><small>distintos en el listado</small></div>
+  <div class="kpi amber"><span>Abiertas por el cliente</span><b>{{ kpis.abiertas_cliente }}</b><small>{{ (kpis.abiertas_cliente / kpis.total * 100)|round|int }}% del total</small></div>
+  <div class="kpi green"><span>Importe total reclamado</span><b>{{ kpis.importe|eur }}</b><small>Media: {{ kpis.media|eur }} por reclamación</small></div>
+</section>
+
+<form class="filters" method="get">
+  <input name="q" value="{{ state.q }}" placeholder="Buscar por cliente, ID (CLM-XXXX) o póliza">
+  <select name="tipo"><option value="">Todos los tipos ({{ tipos|length }})</option>
+    {% for t in tipos %}<option {{ 'selected' if t == state.tipo }}>{{ t }}</option>{% endfor %}</select>
+  <input type="hidden" name="sort" value="{{ state.sort }}"><input type="hidden" name="dir" value="{{ state.dir }}"><input type="hidden" name="n" value="{{ state.n }}">
+  <button class="primary">Filtrar</button>
+  <a class="ghost" href="{{ url_for('index') }}">Limpiar</a>
+</form>
+
+{% set cols = [('id','ID'),('tipoReclamacion','Tipo de reclamación'),
+  ('fechaIngreso','Ingreso'),('casoAbiertoPorCliente','Abierto por cliente'),('canal','Canal'),('fechaInicioViaje','Inicio viaje'),
+  ('fechaFinViaje','Fin viaje'),('destino','Destino')] %}
+<section class="card">
+  <div class="card-h"><b>Expedientes</b><span class="pill">{{ found }} resultados</span></div>
+  <div class="scroll"><table>
+    <thead><tr>{% for key, label in cols %}
+      <th class="{{ 'num' if key == 'importeReclamado' }}"><a class="{{ 'on' if sort == key }}"
+        href="{{ page_url(state, sort=key, dir=('asc' if sort == key and desc else 'desc'), p=1) }}">{{ label }}{{ ' ↓' if sort == key and desc }}{{ ' ↑' if sort == key and not desc }}</a></th>
+    {% endfor %}<th>Revisión del agente</th></tr></thead>
+    <tbody>
+    {% for c in rows %}
+      {% set href = url_for('detail', claim_id=c.id, back=request.full_path) %}
+      <tr class="row" tabindex="0" data-href="{{ href }}">
+        <td class="mono"><a href="{{ href }}">{{ c.id }}</a></td>
+        <td>{{ c.tipoReclamacion }}</td>
+        <td class="mono">{{ c.fechaIngreso|fecha }}</td>
+        <td><span class="tag {{ 'yes' if c.casoAbiertoPorCliente else 'no' }}">{{ 'Sí' if c.casoAbiertoPorCliente else 'No' }}</span></td>
+        <td>{{ c.canal }}</td>
+        <td class="mono">{{ c.fechaInicioViaje|fecha }}</td><td class="mono">{{ c.fechaFinViaje|fecha }}</td>
+        <td>{{ c.destino }}</td>
+        <td>{% set rv = reviews.get(c.id) %}{% if rv and rv.estado == 'completada' %}<span class="badge v-{{ rv.veredicto }}">{{ rv.veredicto }}</span>{% elif rv and rv.estado == 'en_proceso' %}<span class="muted">Revisando…</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+      </tr>
+    {% else %}<tr><td colspan="9" class="empty">Sin resultados para este filtro.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+  <div class="card-f">
+    <span>Mostrando <b>{{ start + 1 if found else 0 }}</b>–<b>{{ start + rows|length }}</b> de <b>{{ found }}</b></span>
+    <span class="seg">Filas: {% for n in per_page_options %}<a class="{{ 'on' if n == per_page }}" href="{{ page_url(state, n=n, p=1) }}">{{ n }}</a>{% endfor %}</span>
+    <span class="pager">
+      <a class="{{ 'off' if page == 1 }}" href="{{ page_url(state, p=page-1) }}">‹</a>
+      {% for p in range(max(1, page-2), min(pages, page+2) + 1) %}<a class="{{ 'on' if p == page }}" href="{{ page_url(state, p=p) }}">{{ p }}</a>{% endfor %}
+      <a class="{{ 'off' if page == pages }}" href="{{ page_url(state, p=page+1) }}">›</a>
+    </span>
+  </div>
+</section>
+<script>
+document.querySelectorAll('tr.row').forEach(r => {
+  r.addEventListener('click', e => { if (!e.target.closest('a')) location.href = r.dataset.href; });
+  r.addEventListener('keydown', e => { if (e.key === 'Enter') location.href = r.dataset.href; });
+});
+</script>
+{% endblock %}

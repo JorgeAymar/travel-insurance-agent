@@ -1,0 +1,4 @@
+flask>=3.0
+python-dotenv>=1.0
+# Solo para el modo claude del agente (opcional):
+# anthropic>=1.0
