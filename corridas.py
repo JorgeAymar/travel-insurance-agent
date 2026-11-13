@@ -18,6 +18,9 @@ def registrar(claim, resultado, iniciada):
     reg = {"id": uuid.uuid4().hex[:10], "claimId": claim["id"], "tipo": claim["tipoReclamacion"],
            "iniciada": iniciada, "finalizada": datetime.now().isoformat(timespec="seconds"),
            "veredicto": resultado["veredicto"], "importeAPagar": resultado.get("importeAPagar"),
+           "motivo": resultado.get("motivo"), "comentario": resultado.get("comentario"),
+           "agente": resultado.get("agente"),
+           "lineas": [{"id": l["id"], "requisito": l["requisito"], "estado": l["estado"], "detalle": l["detalle"]} for l in resultado.get("lineas", [])],
            "nota": resultado.get("nota"), "stats": resultado["stats"]}
     with _lock, open(archivo(), "a", encoding="utf-8") as f:
         f.write(json.dumps(reg, ensure_ascii=False) + "\n")
@@ -79,3 +82,44 @@ def resumen(corridas):
         })
     filas.sort(key=lambda f: (f["medianaSeg"] is None, f["medianaSeg"] or 0))
     return filas
+
+
+# Las tres tecnologías que se comparan en la ficha de cada reclamación.
+TECNOLOGIAS = ("langgraph", "pydantic_ai", "claude_sdk")
+
+
+def tecnologia_de(corrida):
+    """Tecnología que se quiso probar: si la corrida cayó a reglas (fallback), la que se intentó."""
+    s = corrida["stats"]
+    return s["intento"]["arquitectura"] if s.get("fallback") and s.get("intento") else s["arquitectura"]
+
+
+def comparativa(corridas_caso):
+    """Compara la última corrida de cada tecnología sobre una misma reclamación (corridas en orden cronológico)."""
+    ultima = {}
+    for c in corridas_caso:
+        t = tecnologia_de(c)
+        if t in TECNOLOGIAS:
+            ultima[t] = c
+    columnas = []
+    for t in TECNOLOGIAS:
+        c = ultima.get(t)
+        columnas.append({"arq": t, "corrida": c, "disponible": bool(c and not c["stats"].get("fallback")),
+                         "nota": c.get("nota") if c and c["stats"].get("fallback") else None})
+    ok = [k for k in columnas if k["disponible"]]
+    # matriz de líneas: unión de las líneas vistas, en el orden en que aparecen
+    lineas, vistas = [], {}
+    for k in ok:
+        for l in k["corrida"].get("lineas", []):
+            if l["id"] not in vistas:
+                vistas[l["id"]] = {"id": l["id"], "requisito": l["requisito"], "estados": {}}
+                lineas.append(vistas[l["id"]])
+            vistas[l["id"]]["estados"][k["arq"]] = l["estado"]
+    for l in lineas:
+        l["difiere"] = len(set(l["estados"].values())) > 1
+    duraciones = {k["arq"]: k["corrida"]["stats"]["duracionSeg"] for k in ok}
+    veredictos = {k["corrida"]["veredicto"] for k in ok}
+    return {"columnas": columnas, "lineas": lineas, "n": len(ok),
+            "coinciden": (len(veredictos) == 1) if len(ok) > 1 else None,
+            "masRapida": min(duraciones, key=duraciones.get) if len(duraciones) > 1 else None,
+            "dif_lineas": sum(l["difiere"] for l in lineas)}

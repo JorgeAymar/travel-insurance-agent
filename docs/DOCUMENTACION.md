@@ -15,6 +15,7 @@ El objetivo es que cada reclamación llegue con toda la información necesaria p
 ```bash
 git clone <repositorio> && cd travel-insurance-agent
 pip install -r requirements.txt
+pip install -r requirements-extra.txt   # LangGraph, Pydantic AI y Claude Agent SDK
 cp .env.example .env         # y rellena los valores (ver sección 11)
 sh scripts/instalar_hooks.sh # activa la validación de datos privados al hacer commit y push
 python3 generate_data.py     # regenera los JSON de ejemplo (opcional)
@@ -30,7 +31,9 @@ python3 app.py               # escucha en el HOST y PORT del .env
 | Ruta | Contenido |
 |---|---|
 | `app.py` | Servidor Flask: rutas, filtros, paginación, proceso de revisión en segundo plano |
-| `agent.py` | Agente de revisión (reglas, Ollama o Claude; dos arquitecturas) y sus estadísticas |
+| `agent.py` | Agente de revisión (reglas, Ollama o Claude; cinco arquitecturas) y sus estadísticas |
+| `arq_langgraph.py`, `arq_pydantic_ai.py`, `arq_claude_sdk.py` | Las tres tecnologías que se comparan: LangGraph, Pydantic AI y Claude Agent SDK |
+| `requirements-extra.txt` | Dependencias opcionales de esas tres tecnologías |
 | `corridas.py` | Historial de corridas y agregación para comparar modelos y arquitecturas |
 | `bench.py` | Benchmark: corre el agente sobre las mismas reclamaciones con varios modelos y arquitecturas |
 | `config.py` | Lee y valida el `.env`; único sitio donde se lee `os.environ` |
@@ -46,7 +49,7 @@ python3 app.py               # escucha en el HOST y PORT del .env
 
 | Ruta | Qué muestra |
 |---|---|
-| `/` | Listado de reclamaciones con buscador, filtro por tipo, orden por columna y paginación (10, 25, 50 o 100 filas) |
+| `/` | Listado de reclamaciones (máximo `MAX_RECLAMACIONES`) con buscador (ID, tipo, cliente, póliza, destino y texto del relato, sin distinguir mayúsculas ni acentos), filtro por tipo, orden por columna y paginación. Permite elegir con qué tecnología se procesa y revisar desde cada fila |
 | `/reclamaciones/<id>` | **Ficha** de una reclamación; se abre al hacer clic en una fila |
 | `/polizas` | Listado de pólizas con búsqueda por póliza, tomador o DNI y filtro por plan |
 | `/polizas/<número>` | Ficha de póliza: requisitos de pago, coberturas, cláusulas, pagos y reclamaciones |
@@ -129,12 +132,13 @@ Todas las situaciones y porcentajes están en `data/clausulas.json` y se ven en 
 
 # 7. Datos de ejemplo
 
-- **200 reclamaciones**, **50 tipos** distintos (4 por tipo), **120 pólizas** (56 Estándar, 39 Básico, 25 Premium) y **20 cláusulas**.
-- Todas las reclamaciones tienen una póliza registrada.
-- **18 pólizas** tienen una cuota vencida impagada, lo que afecta a **35 reclamaciones**.
-- **13 reclamaciones** piden una cobertura que no incluye el plan de su póliza.
+- **100 reclamaciones** (máximo `MAX_RECLAMACIONES`), **50 tipos** distintos (2 por tipo), **120 pólizas** (56 Estándar, 39 Básico, 25 Premium) y **20 cláusulas**.
+- Todas las reclamaciones tienen una póliza registrada (74 de las pólizas tienen reclamaciones).
+- **18 pólizas** tienen una cuota vencida impagada, lo que afecta a **19 reclamaciones**.
+- **7 reclamaciones** piden una cobertura que no incluye el plan de su póliza.
 - Los desgloses suman exactamente el importe reclamado y los pagos suman la prima.
 - **Cada tipo de reclamación tiene un suceso inspirado en una película reconocible**, escrito sin nombrar nunca la película, más una declaración del asegurado en primera persona. Sirve para probar al agente con relatos variados y fáciles de identificar.
+- Se leen del archivo `CLAIMS_FILE`; si el archivo trae más de `MAX_RECLAMACIONES`, la app solo carga las primeras.
 
 # 8. Decisiones de diseño
 
@@ -155,13 +159,28 @@ El agente decide solo con los hechos del caso, la póliza y las cláusulas: no v
 
 **Modos** (`AGENT_MODE`): `reglas` (determinista, sin LLM), `ollama` (un LLM de un servidor Ollama), `claude` (API de Anthropic) o `auto`. Si un modo con LLM falla, se usa el de reglas y queda anotado.
 
-**Arquitecturas** (`AGENT_ARCH` o el selector de la ficha): `lineas` (una consulta por línea y otra para el veredicto) o `una_llamada` (una sola consulta con todo). Los modelos de Ollama se eligen en la ficha; se listan desde el servidor.
+**Las tres tecnologías (botones)**. En el listado y en la ficha hay un botón por tecnología; el agente que procesa es el que elijas. En la ficha, «Ejecutar las 3 y comparar» las encadena.
+
+| Tecnología | Cómo trabaja | Modelo |
+|---|---|---|
+| **LangGraph** | Un grafo con un nodo por requisito y otro de veredicto. Las líneas se analizan en paralelo (`LANGGRAPH_CONCURRENCIA`) y se marcan en vivo | Ollama o Claude |
+| **Pydantic AI** | Una sola consulta con salida tipada (modelos Pydantic) y reintento si no valida | Ollama |
+| **Claude Agent SDK** | El agente no recibe los datos: los consulta él con Read y Grep en copias saneadas (sin campos de resultado), confinado a una carpeta temporal | Claude (exige `ANTHROPIC_API_KEY`) |
+
+Además hay dos arquitecturas propias como línea base: `lineas` (una consulta por línea y otra para el veredicto) y `una_llamada` (una sola consulta). Se ejecutan desde un desplegable de la ficha o con `bench.py`.
+
+Si una tecnología no puede correr (falta la clave, el paquete o el servidor), cae al revisor por reglas, queda anotado como «No disponible» y no se mezcla con las métricas de las demás.
 
 El LLM no tiene por qué respetar el esquema JSON que se le pide (con algunos modelos, el servidor lo ignora), así que las respuestas se interpretan de forma tolerante y el veredicto se ajusta si contradice las líneas marcadas.
 
-## 9.1 Estadísticas de las corridas
+## 9.1 Estadísticas del procesamiento
 
-Cada corrida guarda su duración total, el tiempo por línea, las llamadas al LLM, los tokens, y su acuerdo con el revisor por reglas (veredicto y líneas). La ficha muestra las de la corrida y compara con otras corridas de la misma reclamación. La página `/estadisticas` agrupa por arquitectura y modelo: mediana, p95 y máximo de duración, llamadas, tokens, acuerdo y reparto de veredictos.
+Al terminar cada corrida se sabe cuánto ha costado procesarla:
+
+- **En la ficha**: bajo el veredicto, una línea con la duración, la tecnología, las llamadas y los tokens; debajo, el detalle (tiempo por línea, acuerdo con las reglas).
+- **En el listado**: cada fila muestra su tecnología, duración y llamadas, y un panel resume todo lo procesado (veredictos, duración total, media, mediana y máximo, llamadas, tokens, acuerdo con las reglas y corridas que cayeron a reglas). Se actualiza solo al terminar cada revisión.
+- **Comparación de las 3 tecnologías** (ficha): veredicto, importe, duración (marca la más rápida), llamadas, tokens, acuerdo con las reglas, motivo y una matriz de resultado por línea con las discrepancias resaltadas.
+- **`/estadisticas`**: agrupa por arquitectura y modelo (mediana, p95 y máximo de duración, llamadas, tokens, acuerdo y reparto de veredictos).
 
 Para comparar con justicia hay que usar las **mismas reclamaciones** en todas las variantes:
 
@@ -180,9 +199,11 @@ Todo valor variable está en el `.env`; `.env.example` lista todas las variables
 | Marca y usuario de la cabecera | `APP_NAME`, `APP_TAGLINE`, `APP_USER_NAME`, `APP_USER_ROLE` |
 | Servidor | `HOST`, `PORT`, `FLASK_DEBUG`, `PER_PAGE_OPTIONS` |
 | Archivos de datos | `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE`, `REVIEWS_FILE`, `CORRIDAS_FILE` |
+| Datos | `MAX_RECLAMACIONES` (tope de reclamaciones que carga la app) |
 | Reglas del agente | `IMPORTE_ALTO_VALIDAR`, `PLAZO_RECLAMACION_DIAS` |
 | Agente | `AGENT_MODE`, `AGENT_ARCH`, `AGENT_STEP_DELAY`, `AGENT_USER_AGENT` |
-| Ollama (si `AGENT_MODE=ollama`) | `OLLAMA_URL`, `OLLAMA_TOKEN`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT`, `OLLAMA_MODELS_TIMEOUT`, `OLLAMA_MODELS_CACHE_SEG`, `OLLAMA_TEMPERATURE` |
+| Las 3 tecnologías | `LANGGRAPH_CONCURRENCIA`, `PYDANTIC_REINTENTOS`, `PYDANTIC_AI_NO_BANNER`, `CLAUDE_SDK_MAX_TURNOS`, `CLAUDE_SDK_HERRAMIENTAS` |
+| Ollama (si `AGENT_MODE=ollama`) | `OLLAMA_URL`, `OLLAMA_TOKEN`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT`, `OLLAMA_MODELS_TIMEOUT`, `OLLAMA_MODELS_CACHE_SEG`, `OLLAMA_TEMPERATURE`, `OLLAMA_REINTENTOS`, `OLLAMA_REINTENTO_SEG` |
 | Claude (si `AGENT_MODE=claude`) | `ANTHROPIC_API_KEY`, `AGENT_MODEL`, `AGENT_MAX_TOKENS` |
 | Benchmark | `BENCH_N`, `BENCH_SEMILLA`, `BENCH_MODELOS`, `BENCH_ARQ`, `BENCH_REPETICIONES`, `BENCH_STEP_DELAY` |
 | Generador de datos | `GEN_RECLAMACIONES`, `GEN_POLIZAS`, `GEN_SEMILLA`, `GEN_FECHA_REFERENCIA`, `GEN_FECHA_INICIO_VIAJES`, `GEN_DIAS_VIAJES` |

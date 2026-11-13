@@ -3,6 +3,7 @@ import json
 import os
 import tempfile
 import threading
+import unicodedata
 from datetime import datetime
 
 import agent
@@ -56,16 +57,30 @@ def _save_review(claim_id, data):
         os.replace(tmp, REVIEWS_FILE)
 
 
-def _run_review(claim_id, started, opts):
-    """Proceso del agente (hilo): carga los datos, revisa y guarda el veredicto."""
+# Nombres con los que se muestran las arquitecturas en pantalla (única fuente).
+ARQ_NOMBRES = {"langgraph": "LangGraph", "pydantic_ai": "Pydantic AI", "claude_sdk": "Claude Agent SDK",
+               "lineas": "Línea por línea", "una_llamada": "Una sola llamada", "reglas": "Reglas"}
+app.jinja_env.globals["arq_nombre"] = lambda a: ARQ_NOMBRES.get(a, a)
+
+
+def _run_review(claim_id, started, runs):
+    """Proceso del agente (hilo): ejecuta una o varias corridas seguidas y guarda el veredicto de la última.
+
+    runs: lista de opciones para agent.revisar (una por tecnología). Cada corrida queda en el historial.
+    """
     try:
         claim = next(c for c in load_claims() if c["id"] == claim_id)
         policy = next(p for p in load_policies() if p["numero"] == claim["numeroPoliza"])
-        def progreso(lineas, fase):  # el agente avisa cada vez que marca una línea
-            _save_review(claim_id, {"estado": "en_proceso", "iniciada": started, "lineas": lineas, "fase": fase})
+        clauses = load_clauses()
+        for i, opts in enumerate(runs, 1):
+            etiqueta = ARQ_NOMBRES.get(opts.get("arquitectura", ""), "") + (f" ({i}/{len(runs)})" if len(runs) > 1 else "")
 
-        result = agent.revisar(claim, policy, load_clauses(), on_progress=progreso, **opts)
-        corridas.registrar(claim, result, started)  # historial para comparar modelos y arquitecturas
+            def progreso(lineas, fase, etiqueta=etiqueta):  # el agente avisa cada vez que marca una línea
+                _save_review(claim_id, {"estado": "en_proceso", "iniciada": started, "lineas": lineas,
+                                        "fase": f"[{etiqueta}] {fase}" if etiqueta else fase})
+
+            result = agent.revisar(claim, policy, clauses, on_progress=progreso, **opts)
+            corridas.registrar(claim, result, started)  # historial para comparar modelos y arquitecturas
         _save_review(claim_id, {"estado": "completada", "iniciada": started,
                                 "finalizada": datetime.now().isoformat(timespec="seconds"), **result})
     except Exception as e:  # el proceso nunca debe quedarse «en proceso» para siempre
@@ -80,8 +95,19 @@ def _load(path):
         return json.load(f)
 
 
+def _norm(texto):
+    """Minúsculas y sin acentos, para buscar sin que importen."""
+    return "".join(ch for ch in unicodedata.normalize("NFD", str(texto).lower()) if unicodedata.category(ch) != "Mn")
+
+
+def _texto_busqueda(c):
+    """Todo lo que el buscador mira de una reclamación: ID, tipo, cliente, póliza, destino, canal y relato."""
+    return _norm(" ".join([c["id"], c["tipoReclamacion"], c["nombreCliente"], c["dniCliente"], c["numeroPoliza"],
+                           c["destino"], c["pais"], c["canal"], " ".join(c["glosa"])]))
+
+
 def load_claims():
-    return _load(DATA_FILE)
+    return _load(DATA_FILE)[:cfg.entero("MAX_RECLAMACIONES")]  # nunca más de MAX_RECLAMACIONES
 
 
 def load_policies():
@@ -112,11 +138,11 @@ def index():
     per_page = a.get("n", PER_PAGE_OPTIONS[0], type=int)
     per_page = per_page if per_page in PER_PAGE_OPTIONS else PER_PAGE_OPTIONS[0]
 
+    terminos = _norm(q).split()
     rows = [
         c for c in claims
         if (not tipo or c["tipoReclamacion"] == tipo)
-        and (not q or q.lower() in c["nombreCliente"].lower() or q.lower() in c["id"].lower()
-             or q.lower() in c["numeroPoliza"].lower())
+        and all(t in _texto_busqueda(c) for t in terminos)
     ]
     if rows and sort in rows[0]:
         rows.sort(key=lambda c: (c[sort] is None, c[sort]), reverse=desc)
@@ -137,7 +163,7 @@ def index():
         "index.html", rows=rows[start:start + per_page], found=len(rows), kpis=kpis, reviews=load_reviews(),
         tipos=sorted({c["tipoReclamacion"] for c in claims}),
         page=page, pages=pages, start=start, per_page=per_page, per_page_options=PER_PAGE_OPTIONS,
-        state=state, sort=sort, desc=desc,
+        state=state, sort=sort, desc=desc, arq_def=cfg.get("AGENT_ARCH"),
     )
 
 
@@ -154,6 +180,7 @@ def detail(claim_id):
                            modelos=agent.listar_modelos(), modelo_def=cfg.opcional("OLLAMA_MODEL"),
                            arq_def=cfg.get("AGENT_ARCH"),
                            corridas_caso=[c for c in corridas.cargar() if c["claimId"] == claim_id][::-1][:15],
+                           cmp=corridas.comparativa([c for c in corridas.cargar() if c["claimId"] == claim_id]),
                            back=request.args.get("back") or url_for("index"))
 
 
@@ -166,20 +193,33 @@ def start_review(claim_id):
     if current and current.get("estado") == "en_proceso":
         return jsonify(current), 409
     body = request.get_json(silent=True) or {}
-    opts = {}
-    if body.get("motor") in ("reglas", "ollama", "claude"):
-        opts["motor"] = body["motor"]
-    if body.get("arquitectura") in ("lineas", "una_llamada"):
-        opts["arquitectura"] = body["arquitectura"]
-    if body.get("modelo"):
+    arq = body.get("arquitectura")
+    if arq not in agent.ARQUITECTURAS + ("todas",):
+        arq = None
+    modelo = body.get("modelo")
+    if modelo:
         modelos = agent.listar_modelos()
-        if body["modelo"] in modelos or body["modelo"] == cfg.opcional("OLLAMA_MODEL") or opts.get("motor") == "claude":
-            opts["modelo"] = body["modelo"]
-        else:
+        if modelo not in modelos and modelo != cfg.opcional("OLLAMA_MODEL"):
             return jsonify({"error": "modelo no disponible"}), 400
+    tecnologias = corridas.TECNOLOGIAS if arq == "todas" else (arq,)
+    runs = []
+    for t in tecnologias:
+        opts = {}
+        if t:
+            opts["arquitectura"] = t
+        if t == "claude_sdk":  # solo Claude: ignora el modelo de Ollama elegido
+            opts["motor"] = "claude"
+        else:
+            if body.get("motor") in ("reglas", "ollama", "claude"):
+                opts["motor"] = body["motor"]
+            elif t in agent.ARQ_EXTERNAS:
+                opts["motor"] = "ollama"  # LangGraph y Pydantic AI usan el LLM de Ollama
+            if modelo:
+                opts["modelo"] = modelo
+        runs.append(opts)
     started = datetime.now().isoformat(timespec="seconds")
     _save_review(claim_id, {"estado": "en_proceso", "iniciada": started})
-    threading.Thread(target=_run_review, args=(claim_id, started, opts), daemon=True).start()
+    threading.Thread(target=_run_review, args=(claim_id, started, runs), daemon=True).start()
     return jsonify({"estado": "en_proceso", "iniciada": started}), 202
 
 

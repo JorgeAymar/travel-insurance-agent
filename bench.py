@@ -27,7 +27,7 @@ def main():
     ap.add_argument("--repeticiones", type=int, default=cfg.entero("BENCH_REPETICIONES"), help="veces que se repite cada combinación")
     a = ap.parse_args()
 
-    claims = json.load(open(cfg.ruta("CLAIMS_FILE"), encoding="utf-8"))
+    claims = json.load(open(cfg.ruta("CLAIMS_FILE"), encoding="utf-8"))[:cfg.entero("MAX_RECLAMACIONES")]
     pols = {p["numero"]: p for p in json.load(open(cfg.ruta("POLICIES_FILE"), encoding="utf-8"))}
     clau = {c["codigo"]: c for c in json.load(open(cfg.ruta("CLAUSES_FILE"), encoding="utf-8"))}
     muestra = random.Random(a.semilla).sample(claims, min(a.n, len(claims)))

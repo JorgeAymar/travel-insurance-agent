@@ -5,6 +5,8 @@ from datetime import date, timedelta
 import config as cfg
 
 N_RECLAMACIONES, N_POLIZAS = cfg.entero("GEN_RECLAMACIONES"), cfg.entero("GEN_POLIZAS")
+if N_RECLAMACIONES > cfg.entero("MAX_RECLAMACIONES"):
+    raise SystemExit("GEN_RECLAMACIONES no puede superar MAX_RECLAMACIONES (ver .env)")
 FECHA_REF = date.fromisoformat(cfg.get("GEN_FECHA_REFERENCIA"))      # hoy, a efectos de «Vigente»/«Finalizada»
 FECHA_INICIO_VIAJES = date.fromisoformat(cfg.get("GEN_FECHA_INICIO_VIAJES"))
 DIAS_VIAJES = cfg.entero("GEN_DIAS_VIAJES")

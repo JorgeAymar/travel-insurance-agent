@@ -12,7 +12,7 @@
 </section>
 
 <form class="filters" method="get">
-  <input name="q" value="{{ state.q }}" placeholder="Buscar por cliente, ID (CLM-XXXX) o póliza">
+  <input name="q" value="{{ state.q }}" placeholder="Buscar por ID, tipo, cliente, póliza, destino o texto del relato">
   <select name="tipo"><option value="">Todos los tipos ({{ tipos|length }})</option>
     {% for t in tipos %}<option {{ 'selected' if t == state.tipo }}>{{ t }}</option>{% endfor %}</select>
   <input type="hidden" name="sort" value="{{ state.sort }}"><input type="hidden" name="dir" value="{{ state.dir }}"><input type="hidden" name="n" value="{{ state.n }}">
@@ -23,6 +23,17 @@
 {% set cols = [('id','ID'),('tipoReclamacion','Tipo de reclamación'),
   ('fechaIngreso','Ingreso'),('casoAbiertoPorCliente','Abierto por cliente'),('canal','Canal'),('fechaInicioViaje','Inicio viaje'),
   ('fechaFinViaje','Fin viaje'),('destino','Destino')] %}
+<section class="tec-bar" id="tecbar" data-def="{{ arq_def }}">
+  <span class="lbl">Agente que procesa:</span>
+  <button type="button" class="tec-opt" data-arq="langgraph"><b>LangGraph</b></button>
+  <button type="button" class="tec-opt" data-arq="pydantic_ai"><b>Pydantic AI</b></button>
+  <button type="button" class="tec-opt" data-arq="claude_sdk"><b>Claude Agent SDK</b></button>
+  <span class="muted small">Elige uno y pulsa «Revisar» en la reclamación. Para ejecutar los tres y compararlos, abre la ficha.</span>
+</section>
+<section class="card pad" id="resumen-proc" hidden>
+  <div class="card-h2"><b>Estadísticas del procesamiento</b><a href="{{ url_for('stats_page') }}">Comparar modelos y arquitecturas →</a></div>
+  <div class="statgrid" id="resumen-grid"></div>
+</section>
 <section class="card">
   <div class="card-h"><b>Expedientes</b><span class="pill">{{ found }} resultados</span></div>
   <div class="scroll"><table>
@@ -41,7 +52,8 @@
         <td>{{ c.canal }}</td>
         <td class="mono">{{ c.fechaInicioViaje|fecha }}</td><td class="mono">{{ c.fechaFinViaje|fecha }}</td>
         <td>{{ c.destino }}</td>
-        <td>{% set rv = reviews.get(c.id) %}{% if rv and rv.estado == 'completada' %}<span class="badge v-{{ rv.veredicto }}">{{ rv.veredicto }}</span>{% elif rv and rv.estado == 'en_proceso' %}<span class="muted">Revisando…</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td class="rev" data-id="{{ c.id }}">{% set rv = reviews.get(c.id) %}<span class="res">{% if rv and rv.estado == 'completada' %}<span class="badge v-{{ rv.veredicto }}">{{ rv.veredicto }}</span><small class="d">{{ arq_nombre(rv.stats.arquitectura) if rv.stats else '' }}{% if rv.stats %} · {{ rv.stats.duracionSeg }} s · {{ rv.stats.llamadas }} llam.{% endif %}</small>{% elif rv and rv.estado == 'en_proceso' %}<span class="muted">Revisando…</span>{% else %}<span class="muted">—</span>{% endif %}</span>
+          <button type="button" class="run-btn" data-id="{{ c.id }}">Revisar</button></td>
       </tr>
     {% else %}<tr><td colspan="9" class="empty">Sin resultados para este filtro.</td></tr>{% endfor %}
     </tbody>
@@ -58,8 +70,64 @@
 </section>
 <script>
 document.querySelectorAll('tr.row').forEach(r => {
-  r.addEventListener('click', e => { if (!e.target.closest('a')) location.href = r.dataset.href; });
+  r.addEventListener('click', e => { if (!e.target.closest('a, button')) location.href = r.dataset.href; });
   r.addEventListener('keydown', e => { if (e.key === 'Enter') location.href = r.dataset.href; });
 });
+
+// --- Agente que procesa: 3 botones (se recuerda la elección) y «Revisar» por fila
+(function () {
+  const barra = document.getElementById('tecbar'), opciones = barra.querySelectorAll('.tec-opt');
+  const validas = [...opciones].map(b => b.dataset.arq);
+  let elegida = null;
+  try { elegida = localStorage.getItem('agente_arq'); } catch (e) {}
+  if (!validas.includes(elegida)) elegida = validas.includes(barra.dataset.def) ? barra.dataset.def : validas[0];
+  const marcar = () => opciones.forEach(b => b.classList.toggle('on', b.dataset.arq === elegida));
+  opciones.forEach(b => b.addEventListener('click', () => { elegida = b.dataset.arq; try { localStorage.setItem('agente_arq', elegida); } catch (e) {} marcar(); }));
+  marcar();
+  const nombres = {langgraph: 'LangGraph', pydantic_ai: 'Pydantic AI', claude_sdk: 'Claude Agent SDK'};
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  async function seguir(id, celda) {
+    const r = await (await fetch('/api/revisiones/' + id)).json();
+    const res = celda.querySelector('.res'), btn = celda.querySelector('.run-btn');
+    if (r.estado === 'en_proceso') { res.innerHTML = '<span class="muted">' + esc(r.fase ? r.fase.slice(0, 38) : 'Revisando…') + '</span>'; return setTimeout(() => seguir(id, celda), 800); }
+    btn.disabled = false;
+    if (r.estado === 'completada') {
+      const s = r.stats || {};
+      res.innerHTML = '<span class="badge v-' + esc(r.veredicto) + '">' + esc(r.veredicto) + '</span><small class="d">' + esc(nombres[s.arquitectura] || s.arquitectura || '')
+        + (s.fallback ? ' (sin LLM)' : '') + ' · ' + esc(s.duracionSeg) + ' s · ' + esc(s.llamadas) + ' llam.</small>';
+    } else res.innerHTML = '<span class="muted">Error</span>';
+    resumen();
+  }
+  document.querySelectorAll('.run-btn').forEach(btn => btn.addEventListener('click', async () => {
+    const celda = btn.closest('.rev'), id = btn.dataset.id;
+    btn.disabled = true; celda.querySelector('.res').innerHTML = '<span class="muted">Iniciando…</span>';
+    const resp = await fetch('/reclamaciones/' + id + '/revision', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({arquitectura: elegida})});
+    if (resp.status === 202 || resp.status === 409) seguir(id, celda); else { btn.disabled = false; celda.querySelector('.res').innerHTML = '<span class="muted">Error ' + resp.status + '</span>'; }
+  }));
+  // Resumen de lo procesado: se recalcula con las revisiones guardadas cada vez que termina una
+  const num = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 1});
+  async function resumen() {
+    const todas = Object.values(await (await fetch('/api/revisiones')).json()).filter(r => r.estado === 'completada' && r.stats);
+    const panel = document.getElementById('resumen-proc');
+    if (!todas.length) { panel.hidden = true; return; }
+    const dur = todas.map(r => r.stats.duracionSeg).sort((a, b) => a - b), suma = (f) => todas.reduce((t, r) => t + (f(r) || 0), 0);
+    const v = k => todas.filter(r => r.veredicto === k).length, fb = todas.filter(r => r.stats.fallback).length;
+    const celdas = [
+      ['Reclamaciones procesadas', todas.length],
+      ['Veredictos (A / R / V)', v('Aprobado') + ' / ' + v('Rechazado') + ' / ' + v('Validar')],
+      ['Duración total', num(suma(r => r.stats.duracionSeg)) + ' s'],
+      ['Duración media · mediana · máx.', num(suma(r => r.stats.duracionSeg) / todas.length) + ' · ' + num(dur[Math.floor(dur.length / 2)]) + ' · ' + num(dur[dur.length - 1]) + ' s'],
+      ['Llamadas al modelo', num(suma(r => r.stats.llamadas))],
+      ['Tokens (entrada / salida)', num(suma(r => r.stats.tokensEntrada)) + ' / ' + num(suma(r => r.stats.tokensSalida))],
+      ['Acuerdo con las reglas', (() => { const c = todas.filter(r => r.stats.acuerdoVeredicto !== null && r.stats.acuerdoVeredicto !== undefined); return c.length ? Math.round(100 * c.filter(r => r.stats.acuerdoVeredicto).length / c.length) + ' % (' + c.length + ')' : '—'; })()],
+      ['Sin LLM (cayeron a reglas)', fb],
+    ];
+    document.getElementById('resumen-grid').innerHTML = celdas.map(([k, x]) => '<div><span>' + esc(k) + '</span><b>' + esc(x) + '</b></div>').join('');
+    panel.hidden = false;
+  }
+  resumen();
+  // las revisiones que ya estaban en curso al abrir la página
+  document.querySelectorAll('.rev').forEach(c => { if (c.querySelector('.res').textContent.includes('Revisando')) { c.querySelector('.run-btn').disabled = true; seguir(c.dataset.id, c); } });
+})();
 </script>
 {% endblock %}

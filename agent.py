@@ -25,6 +25,7 @@ Si un modo con LLM falla, se usa el revisor por reglas y queda anotado en el res
 El agente NO ve el estado, el importe aprobado ni el motivo de rechazo que traen los datos de
 ejemplo: decide solo con los hechos de la reclamación, la póliza y las cláusulas.
 """
+import importlib
 import json
 import re
 import time
@@ -314,12 +315,27 @@ def _preparar(spec):
     return spec
 
 
+# Arquitecturas implementadas con un framework externo, cada una en su módulo arq_<nombre>.py.
+# Contrato de cada módulo:
+#   correr(spec, claim, policy, clauses, llm, med, avisar, motor, modelo) -> (veredicto, info, tiempos, veredicto_seg)
+#     spec        lista de líneas (de construir_lineas). Debe dejar en cada una `estado` (cumple|no_cumple|duda)
+#                 y `detalle`; si l["regla"] existe, `l["referencia"] = l["regla"]()[0]`. Marca "analizando" y llama
+#                 a avisar(fase) cada vez que cambia una línea, para que la pantalla las pinte en vivo.
+#     llm         función (sistema, usuario) -> (texto, info, (tokens_ent, tokens_sal)) del modelo elegido, o None
+#     motor/modelo  motor (ollama|claude) y modelo elegidos en la ficha; modelo puede ser None (usar el del .env)
+#     med         Medidor: suma med.llamadas / med.entrada / med.salida de cada consulta al modelo
+#     veredicto   dict {veredicto, motivo, comentario, importeAPagar} (usar _ajustar_veredicto)
+#     info        dict {"tipo": ..., "modelo": ...}; tiempos: [{"id", "seg"}]; veredicto_seg: float
+ARQ_EXTERNAS = ("langgraph", "pydantic_ai", "claude_sdk")
+ARQUITECTURAS = ("lineas", "una_llamada") + ARQ_EXTERNAS
+
+
 def _correr(motor, modelo, arq, claim, policy, clauses, on_progress, pausa):
     """Una corrida completa. Devuelve el resultado y sus estadísticas."""
     spec = construir_lineas(claim, policy)
     base = {"ollama": _llm_ollama, "claude": _llm_claude}.get(motor)
     llm = (lambda sis, usu: base(sis, usu, modelo)) if base else None
-    if llm is None:  # reglas: las líneas «solo LLM» no se pueden evaluar
+    if llm is None and arq != "claude_sdk":  # reglas: las líneas «solo LLM» no se pueden evaluar
         spec = [l for l in spec if not l.get("solo_llm")]
         arq = "reglas"
     _preparar(spec)
@@ -332,7 +348,10 @@ def _correr(motor, modelo, arq, claim, policy, clauses, on_progress, pausa):
     avisar("Preparando el análisis")
     info = {"tipo": "reglas", "modelo": None}
     ctx = json.dumps(_contexto(claim, policy, clauses), ensure_ascii=False) if llm else None
-    if arq == "una_llamada":
+    if arq in ARQ_EXTERNAS:
+        mod = importlib.import_module(f"arq_{arq}")  # ImportError si falta el paquete: revisar() cae a reglas y lo anota
+        veredicto, info, tiempos, t_veredicto = mod.correr(spec, claim, policy, clauses, llm, med, avisar, motor, modelo)
+    elif arq == "una_llamada":
         for l in spec:
             l["estado"] = "analizando"
         avisar("Analizando todas las líneas en una sola consulta")
@@ -396,8 +415,10 @@ def revisar(claim, policy, clauses, on_progress=None, motor=None, modelo=None, a
     nota = None
     motor = motor or modo_efectivo()
     arq = arquitectura or cfg.get("AGENT_ARCH")
-    if arq not in ("lineas", "una_llamada"):
+    if arq not in ARQUITECTURAS:
         arq = "lineas"
+    if arq == "claude_sdk":
+        motor, modelo = "claude", None  # el Claude Agent SDK solo habla con Claude: no vale el modelo de Ollama elegido
     pausa = cfg.decimal("AGENT_STEP_DELAY")
     fallback = False
     try:

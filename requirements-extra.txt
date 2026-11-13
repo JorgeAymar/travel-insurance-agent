@@ -1,0 +1,4 @@
+# Arquitecturas con framework (opcionales): LangGraph, Pydantic AI y Claude Agent SDK
+langgraph>=1.2
+pydantic-ai-slim[openai]>=2.68
+claude-agent-sdk>=0.2
