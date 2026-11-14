@@ -9,7 +9,7 @@
 <section class="card pad" id="ana-ctl">
   <div class="ana-ctl">
     <label>Máximo de reclamaciones a ejecutar
-      <input type="number" id="ana-n" min="1" max="{{ total }}" step="1" value="{{ por_defecto }}" inputmode="numeric" aria-describedby="ana-n-ayuda">
+      <input type="number" id="ana-n" min="1" max="{{ total }}" step="1" value="{{ por_defecto }}" autocomplete="off" inputmode="numeric" aria-describedby="ana-n-ayuda">
       <small id="ana-n-ayuda">entre 1 y {{ total }}</small></label>
     {% if modelos %}<label>Modelo (las 3 tecnologías)
       <select id="ana-modelo">{% for m in modelos %}<option value="{{ m }}" {{ 'selected' if m == modelo_def }}>{{ m }}</option>{% endfor %}</select></label>{% endif %}

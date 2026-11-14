@@ -115,7 +115,7 @@ def index():
     state = dict(q=q, tipo=tipo, sort=sort, dir="desc" if desc else "asc", n=per_page)
     return render_template(
         "index.html", rows=rows[start:start + per_page], found=len(rows), kpis=kpis,
-        ids_filtrados=[c["id"] for c in rows],  # todo el listado filtrado (no solo la página): lo usa la revisión en lote
+        ids_filtrados=[{"id": c["id"], "tipo": c["tipoReclamacion"]} for c in rows],  # todo el listado filtrado (no solo la página): lo usa la revisión en lote
         por_defecto=max(1, min(cfg.entero("ANALISIS_RECLAMACIONES_DEFECTO"), len(rows) or 1)),
         tipos=sorted({c["tipoReclamacion"] for c in claims}),
         page=page, pages=pages, start=start, per_page=per_page, per_page_options=PER_PAGE_OPTIONS,

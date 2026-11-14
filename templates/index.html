@@ -28,17 +28,33 @@
   <button type="button" class="tec-opt" data-arq="langgraph"><b>LangGraph</b></button>
   <button type="button" class="tec-opt" data-arq="pydantic_ai"><b>Pydantic AI</b></button>
   <button type="button" class="tec-opt" data-arq="claude_sdk"><b>Claude Agent SDK</b></button>
-  <span class="muted small">Elige uno y pulsa «Revisar» en una fila, o revisa varias seguidas con el campo de abajo. Para ejecutar los tres y compararlos, abre la ficha o la página Análisis.</span>
+  <span class="muted small">Pulsa un agente: te pediré confirmación y revisará las primeras X reclamaciones del listado, una cada vez, para ver si aplica devolución.</span>
   <div class="tec-lote">
-    <label>Máximo de reclamaciones a revisar
-      <input type="number" id="max-rec" min="1" max="{{ found if found else 1 }}" step="1" value="{{ por_defecto|default(10) }}" inputmode="numeric" aria-describedby="lote-info">
+    <label>Máximo de reclamaciones a revisar (X)
+      <input type="number" id="max-rec" min="1" max="{{ found if found else 1 }}" step="1" value="{{ por_defecto|default(5) }}" autocomplete="off" inputmode="numeric" aria-describedby="lote-info">
     </label>
-    <button type="button" id="lote-iniciar" class="primary">Revisar las primeras …</button>
     <button type="button" id="lote-parar" class="ghost-btn" hidden>Detener</button>
     <small id="lote-info" class="muted"></small>
   </div>
 </section>
 <script type="application/json" id="ids-filtrados">{{ (ids_filtrados|default([]))|tojson }}</script>
+
+<dialog id="dlg-confirmar" class="dlg" aria-labelledby="dlg-titulo">
+  <form method="dialog">
+    <h2 id="dlg-titulo">Confirmar ejecución</h2>
+    <p id="dlg-texto"></p>
+    <div class="dlg-botones"><button value="cancelar" class="ghost-btn" autofocus>Cancelar</button><button value="ok" class="primary">Sí, ejecutar</button></div>
+  </form>
+</dialog>
+
+<section class="card pad" id="resultado-ejecucion" hidden>
+  <div class="card-h2"><b>Resultado de la ejecución</b><span id="res-meta" class="muted small"></span></div>
+  <div class="scroll"><table class="simple" id="res-tabla">
+    <thead><tr><th>Fecha de ejecución</th><th>ID</th><th>Tipo de reclamación</th><th>Agente</th><th>Estado</th><th>¿Aplica devolución?</th><th>Importe a devolver</th><th>Comentario del agente</th></tr></thead>
+    <tbody></tbody></table></div>
+  <p class="muted small">🔒 Solo virtual: se pierde al refrescar la página. «Revisar a mano» = el agente no puede decidir y deja un comentario para quien deba validar.</p>
+</section>
+
 <section class="card pad" id="resumen-proc" hidden>
   <div class="card-h2"><b>Estadísticas del procesamiento</b><span class="muted small">🔒 solo virtual: se borra al refrescar</span></div>
   <div class="statgrid" id="resumen-grid"></div>
@@ -84,18 +100,20 @@ document.querySelectorAll('tr.row').forEach(r => {
   r.addEventListener('keydown', e => { if (e.key === 'Enter') location.href = r.dataset.href; });
 });
 
-// --- Agente que procesa: 3 botones, «Revisar» por fila y revisión en lote con un máximo. Los resultados viven SOLO en esta página.
+// --- Agente que procesa. Al pulsar un agente se pide confirmación y se revisan, una cada vez, las primeras X reclamaciones del
+// listado para ver si aplica devolución. Los resultados viven SOLO en esta página (se pierden al refrescar).
 (function () {
   const A = window.Agente, resultados = {};
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const eur = n => Number(n).toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' €';
   const barra = document.getElementById('tecbar'), opciones = barra.querySelectorAll('.tec-opt');
   const validas = [...opciones].map(b => b.dataset.arq);
-  let elegida = validas.includes(barra.dataset.def) ? barra.dataset.def : validas[0];
-  const ids = JSON.parse(document.getElementById('ids-filtrados').textContent || '[]');  // todo el listado filtrado, en su orden
-  const campo = document.getElementById('max-rec'), btnLote = document.getElementById('lote-iniciar'),
-        btnParar = document.getElementById('lote-parar'), info = document.getElementById('lote-info');
+  let elegida = validas.includes(barra.dataset.def) ? barra.dataset.def : validas[0];  // agente de los botones «Revisar» de cada fila
+  const ids = JSON.parse(document.getElementById('ids-filtrados').textContent || '[]');  // todo el listado filtrado: [{id, tipo}]
+  const campo = document.getElementById('max-rec'), btnParar = document.getElementById('lote-parar'), info = document.getElementById('lote-info');
+  const dlg = document.getElementById('dlg-confirmar'), dlgTexto = document.getElementById('dlg-texto');
   const SEG = {pydantic_ai: 3, claude_sdk: 12, langgraph: 45};  // segundos aproximados por reclamación, solo para la estimación
-  let parar = false;
+  let parar = false, enLote = false;
 
   function valorCampo() {  // entero entre 1 y el total del listado filtrado
     const tope = +campo.max || 1;
@@ -104,17 +122,16 @@ document.querySelectorAll('tr.row').forEach(r => {
     if (!Number.isFinite(n)) n = +campo.defaultValue || 1;
     return {n: Math.max(1, Math.min(n, tope)), fuera};
   }
+  const tiempo = (n, arq) => { const s = n * (SEG[arq] || 30); return s < 90 ? 'unos ' + Math.round(s) + ' s' : 'unos ' + Math.round(s / 60) + ' min'; };
   function estimar() {
-    const {n, fuera} = valorCampo(), seg = n * (SEG[elegida] || 30);
-    btnLote.textContent = 'Revisar las primeras ' + n;
-    info.innerHTML = (fuera ? '⚠ Valor fuera de rango: se usará <b>' + n + '</b>. ' : '') + '<b>' + n + '</b> ' + (n === 1 ? 'reclamación' : 'reclamaciones')
-      + ' con ' + A.esc(A.nombre(elegida)) + ', una cada vez (' + (seg < 90 ? 'unos ' + Math.round(seg) + ' s' : 'unos ' + Math.round(seg / 60) + ' min') + '). Las que no estén en esta página solo aparecen en el resumen.';
+    const {n, fuera} = valorCampo();
+    info.innerHTML = (fuera ? '⚠ Valor fuera de rango: se usará <b>' + n + '</b>. ' : '') + 'Se revisarán las primeras <b>' + n + '</b> '
+      + (n === 1 ? 'reclamación' : 'reclamaciones') + ' del listado (las que no estén en esta página solo aparecen en el cuadro de resultados).';
   }
   const marcar = () => opciones.forEach(b => { b.classList.toggle('on', b.dataset.arq === elegida); b.setAttribute('aria-pressed', b.dataset.arq === elegida); });
-  opciones.forEach(b => b.addEventListener('click', () => { elegida = b.dataset.arq; marcar(); estimar(); }));
   campo.addEventListener('input', estimar);
   marcar(); estimar();
-  if (!ids.length) { btnLote.disabled = true; campo.disabled = true; }
+  if (!ids.length) { campo.disabled = true; opciones.forEach(b => { b.disabled = true; }); }
 
   function resumen() {
     const celdas = A.resumen(Object.values(resultados)), panel = document.getElementById('resumen-proc');
@@ -124,45 +141,88 @@ document.querySelectorAll('tr.row').forEach(r => {
   const celdaDe = id => document.querySelector('td.rev[data-id="' + id + '"]');
   const pintar = (id, html) => { const c = celdaDe(id); if (c) c.querySelector('.res').innerHTML = html; };
 
-  /** Revisa UNA reclamación con el agente elegido; pinta su fila (si está en esta página) y actualiza el resumen. */
-  async function revisar(id) {
-    const btn = document.querySelector('.run-btn[data-id="' + id + '"]');
+  /** Añade una fila al cuadro «Resultado de la ejecución»: estado, si aplica devolución, comentario y fecha de ejecución. */
+  function agregarFila(item, arq, r, error) {
+    const panel = document.getElementById('resultado-ejecucion'); panel.hidden = false;
+    const fecha = new Date().toLocaleString('es-ES'), tbody = document.querySelector('#res-tabla tbody');
+    let estado, dev, imp = '—', com;
+    if (error) {
+      estado = '<span class="muted">Error</span>'; dev = '<span class="muted">—</span>'; com = A.esc(error);
+    } else {
+      const v = r.veredicto, sinLlm = r.stats && r.stats.fallback;
+      estado = '<span class="badge v-' + A.esc(v) + '">' + A.esc(v) + '</span>' + (sinLlm ? '<small class="d">sin LLM (reglas)</small>' : '');
+      dev = v === 'Aprobado' ? '<b class="dev-si">Sí, aplica</b>' : v === 'Rechazado' ? '<b class="dev-no">No aplica</b>' : '<b class="dev-rev">Revisar a mano</b>';
+      if (v === 'Aprobado' && r.importeAPagar != null) imp = eur(r.importeAPagar);
+      com = v === 'Validar' ? '<b>' + A.esc(r.comentario || r.motivo) + '</b><small class="d">' + A.esc(r.motivo) + '</small>' : A.esc(r.motivo);
+    }
+    const fila = document.createElement('tr');
+    fila.innerHTML = '<td class="mono">' + A.esc(fecha) + '</td><td class="mono"><a href="/reclamaciones/' + encodeURIComponent(item.id) + '" target="_blank" rel="noopener">' + A.esc(item.id) + '</a></td>'
+      + '<td>' + A.esc(item.tipo || '') + '</td><td>' + A.esc(A.nombre(arq)) + '</td><td>' + estado + '</td><td>' + dev + '</td><td class="mono">' + imp + '</td><td class="com">' + com + '</td>';
+    tbody.appendChild(fila);
+    document.getElementById('res-meta').textContent = tbody.children.length + ' ' + (tbody.children.length === 1 ? 'reclamación revisada' : 'reclamaciones revisadas');
+  }
+
+  /** Revisa UNA reclamación con el agente indicado; pinta su fila (si está en esta página), el cuadro de resultados y el resumen. */
+  async function revisar(item, arq) {
+    const id = item.id, btn = document.querySelector('.run-btn[data-id="' + id + '"]');
     if (btn) btn.disabled = true;
     pintar(id, '<span class="muted">Iniciando…</span>');
     for (let intento = 0; intento < 40 && !parar; intento++) {
       try {
-        const r = await A.ejecutar(id, elegida, null, ev => pintar(id, '<span class="muted">' + A.esc((ev.fase || 'Revisando…').slice(0, 38)) + '</span>'));
+        const r = await A.ejecutar(id, arq, null, ev => pintar(id, '<span class="muted">' + A.esc((ev.fase || 'Revisando…').slice(0, 38)) + '</span>'));
         resultados[id] = r;
         const s = r.stats;
         pintar(id, '<span class="badge v-' + A.esc(r.veredicto) + '">' + A.esc(r.veredicto) + '</span><small class="d">' + A.esc(A.nombre(s.arquitectura)) + (s.fallback ? ' (sin LLM)' : '') + ' · ' + A.num(s.duracionSeg) + ' s · ' + s.llamadas + ' llam.</small>');
+        agregarFila(item, arq, r, null);
         resumen();
         break;
       } catch (e) {
         if (/demasiadas revisiones/i.test(e.message)) { pintar(id, '<span class="muted">En espera…</span>'); await sleep(4000); continue; }
         pintar(id, '<span class="muted" title="' + A.esc(e.message) + '">Error</span>');
+        agregarFila(item, arq, null, e.message);
         break;
       }
     }
     if (btn) btn.disabled = false;
   }
 
-  document.querySelectorAll('.run-btn').forEach(btn => btn.addEventListener('click', () => revisar(btn.dataset.id)));
+  // «Revisar» de una fila: una sola reclamación con el último agente usado
+  document.querySelectorAll('.run-btn').forEach(btn => btn.addEventListener('click', () => {
+    const row = btn.closest('tr.row');
+    revisar({id: btn.dataset.id, tipo: row ? row.children[1].innerText.trim() : ''}, elegida);
+  }));
 
-  btnLote.addEventListener('click', async () => {
+  /** Pide confirmación en un diálogo. Devuelve true si se acepta. */
+  function confirmar(arq) {
+    const {n} = valorCampo();
+    dlgTexto.innerHTML = '¿Ejecutar <b>' + A.esc(A.nombre(arq)) + '</b> sobre las primeras <b>' + n + '</b> ' + (n === 1 ? 'reclamación' : 'reclamaciones')
+      + ' del listado?<br>Se revisarán <b>una cada vez</b> (' + tiempo(n, arq) + ') y se analizará si aplica la devolución.<br><small class="muted">Los resultados son solo virtuales: se pierden al refrescar la página.</small>';
+    dlg.returnValue = '';
+    dlg.showModal();
+    return new Promise(r => dlg.addEventListener('close', () => r(dlg.returnValue === 'ok'), {once: true}));
+  }
+
+  async function ejecutarLote(arq) {
     const {n} = valorCampo();
     campo.value = n;
-    const lista = ids.slice(0, n);
-    parar = false;
-    [btnLote, campo].forEach(x => { x.disabled = true; }); opciones.forEach(b => { b.disabled = true; }); btnParar.hidden = false;
+    const lista = ids.slice(0, n), inicio = new Date().toLocaleString('es-ES');
+    elegida = arq; marcar();
+    parar = false; enLote = true;
+    campo.disabled = true; opciones.forEach(b => { b.disabled = true; }); btnParar.hidden = false;
+    document.getElementById('resultado-ejecucion').hidden = false;
     for (let i = 0; i < lista.length && !parar; i++) {
-      info.textContent = 'Revisando ' + (i + 1) + ' de ' + lista.length + ' (' + lista[i] + ') con ' + A.nombre(elegida) + '…';
-      await revisar(lista[i]);
+      info.textContent = 'Revisando ' + (i + 1) + ' de ' + lista.length + ' (' + lista[i].id + ') con ' + A.nombre(arq) + '…';
+      await revisar(lista[i], arq);
     }
-    const hechas = Object.keys(resultados).length;
-    [btnLote, campo].forEach(x => { x.disabled = false; }); opciones.forEach(b => { b.disabled = false; }); btnParar.hidden = true;
+    campo.disabled = false; opciones.forEach(b => { b.disabled = false; }); btnParar.hidden = true; enLote = false;
     estimar();
-    info.innerHTML = '<b>' + (parar ? 'Detenido' : 'Terminado') + ':</b> ' + hechas + ' ' + (hechas === 1 ? 'reclamación revisada' : 'reclamaciones revisadas') + ' en esta página. ' + info.innerHTML;
-  });
+    info.innerHTML = '<b>' + (parar ? 'Detenido' : 'Terminado') + '</b> (ejecución iniciada el ' + A.esc(inicio) + ' con ' + A.esc(A.nombre(arq)) + '). ' + info.innerHTML;
+  }
+
+  opciones.forEach(b => b.addEventListener('click', async () => {
+    if (enLote) return;
+    if (await confirmar(b.dataset.arq)) ejecutarLote(b.dataset.arq);
+  }));
   btnParar.addEventListener('click', () => { parar = true; info.textContent = 'Deteniendo… (termina la corrida en curso)'; });
 })();
 </script>

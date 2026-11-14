@@ -32,7 +32,7 @@ historia es verosímil o extraña.
 
 Cada ficha tiene un botón por tecnología y **Ejecutar las 3 y comparar**, que muestra veredicto, importe, duración,
 llamadas, tokens, acuerdo con el revisor por reglas y una matriz por línea con las discrepancias resaltadas. El
-listado tiene un selector de tecnología, un botón *Revisar* en cada fila y un **campo de máximo de reclamaciones** con un botón que revisa una tras otra las primeras N del listado filtrado. También hay dos arquitecturas de línea
+listado tiene un selector de tecnología, un botón *Revisar* en cada fila y un **campo de máximo de reclamaciones** (arranca siempre en 5). Al pulsar un botón de agente se pide confirmación y se revisan una tras otra las primeras N del listado filtrado para ver si aplica devolución, y se pinta un cuadro de resultados con el estado, el comentario del agente y la fecha de ejecución. También hay dos arquitecturas de línea
 base (línea por línea y una sola llamada) y un revisor determinista por reglas.
 
 **Página de análisis** (`/analisis`): ejecuta las tres tecnologías de forma secuencial (una corrida cada vez) sobre las primeras N reclamaciones, donde N lo fija un campo numérico (por defecto `ANALISIS_RECLAMACIONES_DEFECTO`), y las compara con la referencia: acierto, aprobaciones indebidas, matrices de confusión, acierto por comprobación, en cuáles coinciden las tres y la causa de cada error. Se calcula en vivo en el navegador y también es virtual.

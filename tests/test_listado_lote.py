@@ -22,6 +22,7 @@ class ListadoLote(unittest.TestCase):
         html, ids = self._ids("/?n=10")
         total = len(self.cliente.get("/api/claims").get_json())
         self.assertEqual(len(ids), total)  # 100 ids con 10 filas en la página
+        self.assertTrue(all({"id", "tipo"} <= set(x) for x in ids))
         self.assertGreater(len(ids), html.count('class="run-btn"'))
 
     def test_el_filtro_limita_los_ids_y_el_maximo_del_campo(self):

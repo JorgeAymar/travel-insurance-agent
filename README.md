@@ -31,7 +31,7 @@ pay* (Rejected) or *review by hand* (Validate). The agent does not judge whether
 
 Each claim sheet has a button per technology, plus **Run all 3 and compare**, which shows verdict, payout, duration,
 calls, tokens, agreement with the rules reviewer, and a per-line matrix highlighting disagreements. The list page
-has a technology picker, a *Review* button on every row and a **max-claims field** with a button that reviews the first N claims of the filtered list one after another. Two baseline architectures (line by line, single call)
+has a technology picker, a *Review* button on every row and a **max-claims field** (always starts at 5). Pressing an agent button asks for confirmation and then reviews the first N claims of the filtered list one after another, deciding whether a refund applies, and paints a results table with status, the agent's comment and the execution date. Two baseline architectures (line by line, single call)
 and a deterministic rules reviewer are also included.
 
 **Analysis page** (`/analisis`): runs the three technologies sequentially (one run at a time) on the first N claims, where N is set by a number field (default `ANALISIS_RECLAMACIONES_DEFECTO`), and compares them with the reference: accuracy, wrongly approved claims, confusion matrices, accuracy per check, which claims all three agree on, and the cause of each error. It is computed live in the browser and is virtual too.
