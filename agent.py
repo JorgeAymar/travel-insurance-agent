@@ -349,8 +349,72 @@ ARQ_EXTERNAS = ("langgraph", "pydantic_ai", "claude_sdk")
 ARQUITECTURAS = ("lineas", "una_llamada") + ARQ_EXTERNAS
 
 
+def verificar_datos(claim, policy, clauses):
+    """ETAPA 1 (común a todos los agentes): ¿hay información suficiente para analizar la reclamación?
+
+    Devuelve la lista de datos que faltan (vacía = se puede analizar). No usa el LLM: si falta algo, el agente
+    no gasta llamadas y deja el caso en «Validar» indicando exactamente qué información hace falta.
+    """
+    falta = []
+    claim = claim or {}
+    pol = policy or {}
+    inc = (claim.get("incidente") or {}).get("fecha")
+    cob = claim.get("cobertura") or {}
+    if not policy:
+        falta.append("póliza: no se encontró la póliza de la reclamación")
+    else:
+        if not pol.get("fechaContratacion"):
+            falta.append("póliza: fecha de contratación")
+        if not (pol.get("viaje") or {}).get("fin"):
+            falta.append("póliza: fecha de fin del viaje (vigencia)")
+        if not isinstance(pol.get("pagos"), list) or not pol.get("pagos"):
+            falta.append("póliza: calendario de pagos de la prima")
+    if not inc:
+        falta.append("reclamación: fecha del suceso")
+    if not claim.get("fechaIngreso"):
+        falta.append("reclamación: fecha de ingreso")
+    if not cob.get("nombre") or "incluida" not in cob:
+        falta.append("reclamación: cobertura reclamada y si está incluida en el plan")
+    if (claim.get("situacion") or {}).get("porcentaje") is None:
+        falta.append("reclamación: situación y porcentaje de pago")
+    calc = claim.get("calculo") or {}
+    if calc.get("trasPorcentaje") is None or calc.get("limite") is None:
+        falta.append("reclamación: cálculo del importe (tras el porcentaje y límite)")
+    if not claim.get("documentos"):
+        falta.append("reclamación: lista de documentos")
+    if not claim.get("requisitos"):
+        falta.append("reclamación: requisitos de la cobertura")
+    if not (claim.get("hechos") or {}).get("que"):
+        falta.append("reclamación: relato de los hechos")
+    if not any((clauses or {}).get(c, {}).get("plazoReclamacionDias") for c in (cob.get("clausula"), "G-02")):
+        falta.append("cláusulas: plazo de reclamación (cláusula de la cobertura o G-02)")
+    return falta
+
+
+def _sin_datos(faltan, arq, motor, avisar_fn):
+    """Resultado cuando falta información: Validar, sin consultar al LLM."""
+    linea = {"id": "datos", "grupo": "Previa", "requisito": "Información suficiente para el análisis", "estado": "no_cumple",
+             "detalle": "Falta: " + "; ".join(faltan) + "."}
+    avisar_fn([linea], "Etapa 1: falta información; el análisis se detiene")
+    comentario = ("No se puede analizar la reclamación porque falta información: " + "; ".join(faltan)
+                  + ". Complete estos datos y vuelva a ejecutar la revisión, o revise el caso a mano.")
+    stats = {"arquitectura": arq, "motor": motor, "modelo": None, "llamadas": 0, "tokensEntrada": 0, "tokensSalida": 0,
+             "tiempos": [], "veredictoSeg": 0.0, "lineasComparables": 0, "lineasAcuerdo": 0, "datosInsuficientes": True}
+    return {"veredicto": "Validar", "motivo": "Información insuficiente para analizar la reclamación.", "comentario": comentario,
+            "importeAPagar": None, "lineas": [linea], "agente": {"tipo": "etapa-datos", "modelo": None}, "stats": stats}
+
+
 def _correr(motor, modelo, arq, claim, policy, clauses, on_progress, pausa):
     """Una corrida completa. Devuelve el resultado y sus estadísticas."""
+    # Etapa 1 (todas las arquitecturas): comprobar que hay información suficiente antes de analizar nada.
+    if on_progress:
+        on_progress([], "Etapa 1: comprobando que hay información suficiente")
+    faltan = verificar_datos(claim, policy, clauses)
+    if faltan:
+        return _sin_datos(faltan, arq if motor != "reglas" and (motor == "ollama" or arq == "claude_sdk") else "reglas", motor,
+                          lambda lineas, fase: on_progress(lineas, fase) if on_progress else None)
+    previa = {"id": "datos", "grupo": "Previa", "requisito": "Información suficiente para el análisis", "estado": "cumple",
+              "detalle": "La póliza, las cláusulas y la reclamación traen los datos necesarios para analizar el caso."}
     spec = construir_lineas(claim, policy, clauses)
     base = {"ollama": _llm_ollama, "claude": _llm_claude}.get(motor)
     llm = (lambda sis, usu: base(sis, usu, modelo)) if base else None
@@ -362,7 +426,7 @@ def _correr(motor, modelo, arq, claim, policy, clauses, on_progress, pausa):
 
     def avisar(fase):
         if on_progress:
-            on_progress([_publica(l) for l in spec], fase)
+            on_progress([previa] + [_publica(l) for l in spec], fase)
 
     avisar("Preparando el análisis")
     info = {"tipo": "reglas", "modelo": None}
@@ -415,7 +479,7 @@ def _correr(motor, modelo, arq, claim, policy, clauses, on_progress, pausa):
         else:
             veredicto = _veredicto_reglas(claim, spec)
         t_veredicto = round(time.time() - t, 2)
-    lineas = [_publica(l) | ({"referencia": l["referencia"]} if "referencia" in l else {}) for l in spec]
+    lineas = [previa] + [_publica(l) | ({"referencia": l["referencia"]} if "referencia" in l else {}) for l in spec]
     comparables = [l for l in lineas if "referencia" in l]
     stats = {"arquitectura": arq, "motor": motor, "modelo": info.get("modelo"),
              "llamadas": med.llamadas, "tokensEntrada": med.entrada, "tokensSalida": med.salida,

@@ -213,7 +213,7 @@ def api_referencia():
     pols = {p["numero"]: p for p in load_policies()}
     salida = []
     for c in load_claims():
-        r = agent.revisar(c, pols[c["numeroPoliza"]], clauses, motor="reglas", pausa=0)
+        r = agent.revisar(c, pols.get(c["numeroPoliza"]), clauses, motor="reglas", pausa=0)
         salida.append({"id": c["id"], "tipo": c["tipoReclamacion"], "veredicto": r["veredicto"], "importe": r["importeAPagar"],
                        "lineas": {l["id"]: l["estado"] for l in r["lineas"]}})
     return jsonify(salida)

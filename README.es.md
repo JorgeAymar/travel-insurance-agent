@@ -35,6 +35,7 @@ llamadas, tokens, acuerdo con el revisor por reglas y una matriz por línea con 
 listado tiene un selector de tecnología, un botón *Revisar* en cada fila y un **campo de máximo de reclamaciones** (arranca siempre en 5). Al pulsar un botón de agente se pide confirmación y se revisan una tras otra las primeras N del listado filtrado para ver si aplica devolución, y el resultado se pinta en la propia fila de cada reclamación: estado, ¿aplica devolución?, duración de la revisión, fecha de ejecución y un campo de texto con los comentarios de la ejecución. También hay dos arquitecturas de línea
 base (línea por línea y una sola llamada) y un revisor determinista por reglas.
 
+Todos los agentes empiezan con una **etapa 1 de información suficiente**: comprueban que la póliza, las cláusulas y la reclamación traen los datos necesarios. Si falta algo, no consultan al LLM y dejan el caso en *Validar* indicando qué datos faltan.
 **Página de análisis** (`/analisis`): ejecuta las tres tecnologías de forma secuencial (una corrida cada vez) sobre las primeras N reclamaciones, donde N lo fija un campo numérico (por defecto `ANALISIS_RECLAMACIONES_DEFECTO`), y las compara con la referencia: acierto, aprobaciones indebidas, matrices de confusión, acierto por comprobación, en cuáles coinciden las tres y la causa de cada error. Se calcula en vivo en el navegador y también es virtual.
 
 ## Los resultados del agente son virtuales
