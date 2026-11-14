@@ -147,3 +147,6 @@ dialog.dlg::backdrop{background:rgba(10,20,40,.45)}dialog.dlg h2{margin:0 0 10px
 #res-tabla td.mono{white-space:nowrap}
 td.r-com{min-width:280px}td.r-com textarea{width:100%;min-width:260px;font:12px/1.4 inherit;font-family:inherit;border:1px solid var(--line,#dfe5ee);border-radius:6px;padding:6px;background:transparent;color:inherit;resize:vertical}
 td.r-estado small.d,td.r-dev small.d{display:block}td.r-dur,td.r-fecha{white-space:nowrap}
+dialog.dlg-ancha{max-width:760px;width:92vw;max-height:88vh;overflow:auto}.ficha-cab{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}.ficha-cab h2{margin:0}
+.ver-ficha{display:block;margin-top:6px;padding:3px 10px;border:1px solid var(--blue);border-radius:6px;background:transparent;color:var(--blue);font:inherit;font-size:12px;cursor:pointer}.ver-ficha:hover{background:var(--blue);color:#fff}
+.ln .txt small.d{display:block;color:var(--muted);font-size:12px;margin-top:2px}

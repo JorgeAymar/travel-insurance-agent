@@ -36,6 +36,7 @@ class ListadoLote(unittest.TestCase):
         for campo in ("Estado", "¿Aplica devolución?", "Duración de la revisión", "Fecha de ejecución", "Comentarios de la ejecución"):
             self.assertIn(f"<th>{campo}</th>", html)
         self.assertIn('class="r-com"', html)
+        self.assertIn('id="dlg-ficha"', html)
         self.assertNotIn('id="resultado-ejecucion"', html)
         self.assertNotIn('id="res-tabla"', html)
 

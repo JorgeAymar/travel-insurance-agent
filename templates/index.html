@@ -46,6 +46,12 @@
   </form>
 </dialog>
 
+<dialog id="dlg-ficha" class="dlg dlg-ancha" aria-labelledby="ficha-titulo">
+  <div class="ficha-cab"><h2 id="ficha-titulo">Ficha de la revisión</h2><button type="button" class="ghost-btn" id="ficha-cerrar" autofocus>Cerrar</button></div>
+  <div id="ficha-cuerpo"></div>
+  <p class="muted small">🔒 Solo virtual: se pierde al refrescar la página. <a id="ficha-enlace" href="#" target="_blank" rel="noopener">Abrir la ficha de la reclamación</a></p>
+</dialog>
+
 <section class="card pad" id="resumen-proc" hidden>
   <div class="card-h2"><b>Estadísticas del procesamiento</b><span class="muted small">🔒 solo virtual: se borra al refrescar</span></div>
   <div class="statgrid" id="resumen-grid"></div>
@@ -156,11 +162,26 @@ document.querySelectorAll('tr.row').forEach(r => {
       const malas = (r.lineas || []).filter(l => l.estado !== 'cumple').map(l => '• ' + l.requisito + ': ' + l.detalle);
       if (malas.length) com += '\n\nPuntos que no se cumplen o no constan:\n' + malas.join('\n');
     }
+    if (!error) estado += '<button type="button" class="ver-ficha" data-id="' + A.esc(item.id) + '">Ver ficha</button>';
     put('.r-estado', estado); put('.r-dev', dev);
     put('.r-dur', seg == null ? '<span class="muted">—</span>' : A.esc(dur(seg)));
     put('.r-fecha', A.esc(fecha));
     tr.querySelector('.r-com textarea').value = com;
   }
+
+  // Ficha de la revisión: veredicto, estadísticas, comentarios y las líneas revisadas (solo desde la memoria de esta página)
+  const dlgFicha = document.getElementById('dlg-ficha');
+  function abrirFicha(id) {
+    const r = resultados[id]; if (!r) return;
+    const tipo = (document.querySelector('td.r-estado[data-id="' + id + '"]').closest('tr').children[1] || {}).innerText || '';
+    document.getElementById('ficha-titulo').textContent = 'Revisión de ' + id + ' · ' + tipo.trim();
+    document.getElementById('ficha-cuerpo').innerHTML = A.resultadoHtml(r).replace(/ <a href="#estadisticas-corrida">ver detalle<\/a>/, '')
+      + '<h3>Líneas revisadas</h3><ul class="docs lines">' + A.lineasHtml(r.lineas) + '</ul>';
+    document.getElementById('ficha-enlace').href = '/reclamaciones/' + encodeURIComponent(id);
+    dlgFicha.showModal();
+  }
+  document.getElementById('ficha-cerrar').addEventListener('click', () => dlgFicha.close());
+  document.querySelector('table').addEventListener('click', e => { const b = e.target.closest('.ver-ficha'); if (b) abrirFicha(b.dataset.id); });
 
   /** Revisa UNA reclamación con el agente indicado; rellena los campos de su propia fila (si está en esta página) y el resumen. */
   async function revisar(item, arq) {
