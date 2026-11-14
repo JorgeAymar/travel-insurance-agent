@@ -182,7 +182,7 @@
     if (!Number.isFinite(n)) n = +campo.defaultValue || 1;
     n = Math.max(1, Math.min(n, tope));
     $('ana-estimacion').innerHTML = (fuera ? '⚠ Valor fuera de rango: se usará <b>' + n + '</b>. ' : '')
-      + 'Se ejecutarán <b>' + n + ' reclamación' + (n === 1 ? '' : 'es') + '</b> × 3 tecnologías = <b>' + (3 * n) + ' corridas</b>, una cada vez (unos ' + n + ' min).';
+      + 'Se ejecutarán <b>' + n + ' ' + (n === 1 ? 'reclamación' : 'reclamaciones') + '</b> × 3 tecnologías = <b>' + (3 * n) + ' corridas</b>, una cada vez (unos ' + n + ' min).';
   }
   $('ana-n').addEventListener('input', estimacion);
   estimacion();
