@@ -230,7 +230,7 @@
     "codigo": "C-06",
     "categoria": "repatriacion",
     "titulo": "Repatriación y evacuación",
-    "texto": "Se organiza y se asume el traslado sanitario del asegurado, o de los restos mortales, hasta su domicilio o centro hospitalario de referencia cuando lo determine el equipo médico de la aseguradora. Es imprescindible la autorización previa de la Central de Asistencia.",
+    "texto": "Se organiza y se asume el traslado sanitario del asegurado hasta su domicilio o centro hospitalario de referencia cuando lo determine el equipo médico de la aseguradora. Es imprescindible la autorización previa de la Central de Asistencia.",
     "exclusiones": [
       "Traslados no autorizados previamente",
       "Evacuaciones por motivos de comodidad"
@@ -253,7 +253,7 @@
       {
         "situacion": "Repatriación o evacuación con autorización previa",
         "porcentaje": 100,
-        "condicion": "Traslado sanitario o de restos mortales autorizado por la Central."
+        "condicion": "Traslado sanitario autorizado por la Central."
       }
     ]
   },
@@ -261,7 +261,7 @@
     "codigo": "C-07",
     "categoria": "accidente",
     "titulo": "Accidentes personales",
-    "texto": "Se garantiza el pago de las prestaciones por fallecimiento, invalidez permanente o gastos de asistencia cuando el asegurado sufra un accidente durante el viaje. La invalidez se valora según el baremo contratado, una vez estabilizadas las secuelas.",
+    "texto": "Se garantiza el pago de las prestaciones por invalidez permanente, gastos de rescate o gastos de asistencia cuando el asegurado sufra un accidente durante el viaje. La invalidez se valora según el baremo contratado, una vez estabilizadas las secuelas.",
     "exclusiones": [
       "Deportes de riesgo no declarados",
       "Accidentes bajo los efectos del alcohol o las drogas",
@@ -293,9 +293,9 @@
         "condicion": "Asistencia y rehabilitación."
       },
       {
-        "situacion": "Fallecimiento accidental",
+        "situacion": "Gastos de rescate y salvamento",
         "porcentaje": 100,
-        "condicion": "Capital contratado para los beneficiarios."
+        "condicion": "Búsqueda, rescate y traslado hasta el centro de asistencia."
       },
       {
         "situacion": "Invalidez permanente parcial",
@@ -355,7 +355,7 @@
     "codigo": "C-09",
     "categoria": "cancelacion",
     "titulo": "Cancelación y regreso anticipado",
-    "texto": "Se reembolsan los gastos no recuperables de viaje cuando el asegurado deba cancelarlo, o interrumpirlo, por una causa grave, sobrevenida e imprevisible posterior a la contratación: enfermedad grave, fallecimiento de familiares de primer grado, despido, citación judicial, entre otras. La causa debe acreditarse documentalmente.",
+    "texto": "Se reembolsan los gastos no recuperables de viaje cuando el asegurado deba cancelarlo, o interrumpirlo, por una causa grave, sobrevenida e imprevisible posterior a la contratación: enfermedad grave, hospitalización de familiares de primer grado, nacimiento prematuro de un hijo, despido, citación judicial, entre otras. La causa debe acreditarse documentalmente.",
     "exclusiones": [
       "Causas conocidas antes de contratar",
       "Cambios de opinión o de planes",
@@ -371,7 +371,7 @@
     ],
     "requisitos": [
       "La causa es grave, sobrevenida e imprevisible y posterior a la contratación",
-      "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+      "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
       "Cancelación comunicada a la agencia y a los proveedores el mismo día de la causa",
       "Facturas de cancelación y servicios no reembolsables"
     ],

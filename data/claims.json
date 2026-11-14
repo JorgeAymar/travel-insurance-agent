@@ -87,7 +87,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -980,7 +980,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -2420,7 +2420,7 @@
     "situacion": {
       "nombre": "Repatriación o evacuación con autorización previa",
       "porcentaje": 100,
-      "condicion": "Traslado sanitario o de restos mortales autorizado por la Central."
+      "condicion": "Traslado sanitario autorizado por la Central."
     },
     "calculo": {
       "reclamado": 34533,
@@ -2538,7 +2538,7 @@
   },
   {
     "id": "CLM-0015",
-    "tipoReclamacion": "Repatriación de restos",
+    "tipoReclamacion": "Traslado en ambulancia aérea",
     "nombreCliente": "Sergio López Álvarez",
     "dniCliente": "21571646S",
     "email": "sergio.lopez65@example.com",
@@ -2572,15 +2572,15 @@
       "un compañero de viaje"
     ],
     "glosa": [
-      "El 23 de julio de 2026 a las 15:15 h, en Roma (Italia), concretamente en «Aeropuerto de Roma», Sergio López Álvarez (DNI 21571646S), titular de la póliza, que viajaba junto a una amiga y un compañero de viaje del 23 de julio de 2026 al 10 de agosto de 2026, vivió el siguiente suceso: tras el fallecimiento del asegurado, la familia solicitó llevar sus restos a casa para que descansara en el panteón familiar y pudiera ser recordado en la ofrenda del Día de Muertos, con flores de cempasúchil, velas y su fotografía.",
-      "Declaración del asegurado: «Mi abuelo murió lejos y queremos traerlo a casa para ponerle su foto, sus flores de cempasúchil y su ofrenda en la noche de los muertos.»",
+      "El 23 de julio de 2026 a las 15:15 h, en Roma (Italia), concretamente en «Aeropuerto de Roma», Sergio López Álvarez (DNI 21571646S), titular de la póliza, que viajaba junto a una amiga y un compañero de viaje del 23 de julio de 2026 al 10 de agosto de 2026, vivió el siguiente suceso: tras un accidente de avioneta, el asegurado quedó aislado en una isla desierta, hablando con un balón de voleibol al que llamó como a un amigo, hasta que fue localizado y evacuado en ambulancia aérea hasta el hospital.",
+      "Declaración del asegurado: «Mi avioneta cayó en una isla perdida, pasé años solo hablando con un balón y por fin me sacaron en una ambulancia aérea.»",
       "La Central de Asistencia fue avisada, se coordinó el traslado con el equipo médico y se emitió el informe de aptitud para el transporte. Referencia oficial: INF-ROM-86609.",
       "El asegurado ingresó la reclamación el 23 de julio de 2026 por teléfono, 0 días después del suceso, solicitando el reembolso de 44.622 € según el desglose (traslado terrestre: 18.021 €; gestiones administrativas: 12.304 €; acompañante sanitario: 14.297 €). La cobertura aplicable es «Repatriación y evacuación» (límite 50.000 €, franquicia 50 €) según la cláusula C-06 del plan Básico. Situación: «Repatriación o evacuación con autorización previa», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada."
     ],
-    "declaracion": "Mi abuelo murió lejos y queremos traerlo a casa para ponerle su foto, sus flores de cempasúchil y su ofrenda en la noche de los muertos.",
+    "declaracion": "Mi avioneta cayó en una isla perdida, pasé años solo hablando con un balón y por fin me sacaron en una ambulancia aérea.",
     "hechos": {
       "quien": "Sergio López Álvarez (DNI 21571646S), junto a una amiga y un compañero de viaje",
-      "que": "Tras el fallecimiento del asegurado, la familia solicitó llevar sus restos a casa para que descansara en el panteón familiar y pudiera ser recordado en la ofrenda del Día de Muertos, con flores de cempasúchil, velas y su fotografía.",
+      "que": "Tras un accidente de avioneta, el asegurado quedó aislado en una isla desierta, hablando con un balón de voleibol al que llamó como a un amigo, hasta que fue localizado y evacuado en ambulancia aérea hasta el hospital.",
       "cuando": "23 de julio de 2026, 15:15 h",
       "donde": "Aeropuerto de Roma — Roma, Italia",
       "como": "La Central de Asistencia fue avisada, se coordinó el traslado con el equipo médico y se emitió el informe de aptitud para el transporte. Referencia oficial: INF-ROM-86609.",
@@ -2610,7 +2610,7 @@
     "situacion": {
       "nombre": "Repatriación o evacuación con autorización previa",
       "porcentaje": 100,
-      "condicion": "Traslado sanitario o de restos mortales autorizado por la Central."
+      "condicion": "Traslado sanitario autorizado por la Central."
     },
     "calculo": {
       "reclamado": 44622,
@@ -2803,7 +2803,7 @@
     "situacion": {
       "nombre": "Repatriación o evacuación con autorización previa",
       "porcentaje": 100,
-      "condicion": "Traslado sanitario o de restos mortales autorizado por la Central."
+      "condicion": "Traslado sanitario autorizado por la Central."
     },
     "calculo": {
       "reclamado": 6220,
@@ -3665,7 +3665,7 @@
   },
   {
     "id": "CLM-0021",
-    "tipoReclamacion": "Muerte accidental",
+    "tipoReclamacion": "Fractura durante una excursión",
     "nombreCliente": "Luis López López",
     "dniCliente": "85543051W",
     "email": "luis.lopez26@example.com",
@@ -3696,15 +3696,15 @@
     },
     "acompanantes": [],
     "glosa": [
-      "El 23 de febrero de 2026 a las 09:45 h, en Buenos Aires (Argentina), concretamente en «Zona de excursiones a las afueras de Buenos Aires», Luis López López (DNI 85543051W), titular de la póliza, que viajaba en solitario del 13 de febrero de 2026 al 23 de febrero de 2026, vivió el siguiente suceso: tras librarse por muy poco de un accidente a bordo gracias a una premonición que hizo que varios pasajeros bajaran a tiempo, una cadena de casualidades improbables acabó con la vida del asegurado; sus beneficiarios reclaman la prestación.",
-      "Declaración del asegurado: «Mi hermano se salvó de milagro del accidente por una premonición, pero la muerte lo alcanzó después por una cadena de casualidades increíble.»",
+      "El 23 de febrero de 2026 a las 09:45 h, en Buenos Aires (Argentina), concretamente en «Zona de excursiones a las afueras de Buenos Aires», Luis López López (DNI 85543051W), titular de la póliza, que viajaba en solitario del 13 de febrero de 2026 al 23 de febrero de 2026, vivió el siguiente suceso: el asegurado, con sombrero y látigo de aventurero, se internó en una excavación en busca de un tesoro antiguo, cayó por un foso lleno de trampas y se fracturó una pierna; tuvo que ser atendido y rehabilitado.",
+      "Declaración del asegurado: «Iba tras un tesoro perdido con mi sombrero y mi látigo, caí en un foso de trampas y me rompí la pierna.»",
       "Fue atendido en el lugar y trasladado al centro médico; se levantó el parte del accidente y se emitió el informe médico con el pronóstico y el tratamiento. Referencia oficial: INF-BUE-56913.",
-      "El asegurado ingresó la reclamación el 23 de febrero de 2026 por web, 0 días después del suceso, solicitando el reembolso de 36.027 € según el desglose (gastos de acompañante: 10.101 €; asistencia médica de urgencia: 7.427 €; rehabilitación y fisioterapia: 8.463 €; transporte y traslados: 10.036 €). La cobertura aplicable es «Accidentes personales» (límite 40.000 €, franquicia 50 €) según la cláusula C-07 del plan Premium. Situación: «Fallecimiento accidental», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada."
+      "El asegurado ingresó la reclamación el 23 de febrero de 2026 por web, 0 días después del suceso, solicitando el reembolso de 36.027 € según el desglose (gastos de acompañante: 10.101 €; asistencia médica de urgencia: 7.427 €; rehabilitación y fisioterapia: 8.463 €; transporte y traslados: 10.036 €). La cobertura aplicable es «Accidentes personales» (límite 40.000 €, franquicia 50 €) según la cláusula C-07 del plan Premium. Situación: «Gastos de asistencia por accidente», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada."
     ],
-    "declaracion": "Mi hermano se salvó de milagro del accidente por una premonición, pero la muerte lo alcanzó después por una cadena de casualidades increíble.",
+    "declaracion": "Iba tras un tesoro perdido con mi sombrero y mi látigo, caí en un foso de trampas y me rompí la pierna.",
     "hechos": {
       "quien": "Luis López López (DNI 85543051W), en solitario",
-      "que": "Tras librarse por muy poco de un accidente a bordo gracias a una premonición que hizo que varios pasajeros bajaran a tiempo, una cadena de casualidades improbables acabó con la vida del asegurado; sus beneficiarios reclaman la prestación.",
+      "que": "El asegurado, con sombrero y látigo de aventurero, se internó en una excavación en busca de un tesoro antiguo, cayó por un foso lleno de trampas y se fracturó una pierna; tuvo que ser atendido y rehabilitado.",
       "cuando": "23 de febrero de 2026, 09:45 h",
       "donde": "Zona de excursiones a las afueras de Buenos Aires — Buenos Aires, Argentina",
       "como": "Fue atendido en el lugar y trasladado al centro médico; se levantó el parte del accidente y se emitió el informe médico con el pronóstico y el tratamiento. Referencia oficial: INF-BUE-56913.",
@@ -3736,9 +3736,9 @@
       "clausula": "C-07"
     },
     "situacion": {
-      "nombre": "Fallecimiento accidental",
+      "nombre": "Gastos de asistencia por accidente",
       "porcentaje": 100,
-      "condicion": "Capital contratado para los beneficiarios."
+      "condicion": "Atención médica y rehabilitación."
     },
     "calculo": {
       "reclamado": 36027,
@@ -6151,7 +6151,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -6252,7 +6252,7 @@
   },
   {
     "id": "CLM-0035",
-    "tipoReclamacion": "Cancelación por fallecimiento familiar",
+    "tipoReclamacion": "Cancelación por nacimiento adelantado",
     "nombreCliente": "Andrés Gómez Domínguez",
     "dniCliente": "99300492Q",
     "email": "andres.gomez45@example.com",
@@ -6285,15 +6285,15 @@
       "su padre"
     ],
     "glosa": [
-      "Andrés Gómez Domínguez (DNI 99300492Q), titular de la póliza, tenía contratado un viaje a Buenos Aires (Argentina) del 5 de agosto de 2026 al 9 de agosto de 2026, junto a su padre, alojado en el Hotel Hotel Palermo Soho. El 18 de julio de 2026, el asegurado tenía previsto asistir a varias bodas durante el viaje, pero el fallecimiento de un familiar cercano hizo coincidir el funeral con las fechas de salida, por lo que canceló.",
-      "Declaración del asegurado: «Iba a cuatro bodas con el viaje, pero un familiar falleció y el funeral coincidió con la salida; tuve que cancelar.»",
+      "Andrés Gómez Domínguez (DNI 99300492Q), titular de la póliza, tenía contratado un viaje a Buenos Aires (Argentina) del 5 de agosto de 2026 al 9 de agosto de 2026, junto a su padre, alojado en el Hotel Hotel Palermo Soho. El 18 de julio de 2026, el asegurado tenía previsto asistir a varias bodas durante el viaje, pero el hijo de su pareja nació semanas antes de lo previsto, justo en los días de salida, por lo que canceló.",
+      "Declaración del asegurado: «Iba a cuatro bodas con el viaje, pero mi pareja se puso de parto tres semanas antes y tuve que cancelar.»",
       "Comunicó la cancelación a la agencia y a los proveedores en cuanto se produjo la causa, y recibió la liquidación de los gastos de cancelación aplicados. Referencia oficial: CAN-BUE-48663.",
       "El asegurado ingresó la reclamación el 24 de julio de 2026 por web, 6 días después del suceso, solicitando el reembolso de 4.002 € según el desglose (alojamiento no reembolsable: 1.954 €; vuelos no reembolsables: 2.048 €). La cobertura aplicable es «Cancelación de viaje» (límite 10.000 €, franquicia 100 €) según la cláusula C-09 del plan Premium. Situación: «Cancelación por causa grave documentada», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada."
     ],
-    "declaracion": "Iba a cuatro bodas con el viaje, pero un familiar falleció y el funeral coincidió con la salida; tuve que cancelar.",
+    "declaracion": "Iba a cuatro bodas con el viaje, pero mi pareja se puso de parto tres semanas antes y tuve que cancelar.",
     "hechos": {
       "quien": "Andrés Gómez Domínguez (DNI 99300492Q), junto a su padre",
-      "que": "El asegurado tenía previsto asistir a varias bodas durante el viaje, pero el fallecimiento de un familiar cercano hizo coincidir el funeral con las fechas de salida, por lo que canceló.",
+      "que": "El asegurado tenía previsto asistir a varias bodas durante el viaje, pero el hijo de su pareja nació semanas antes de lo previsto, justo en los días de salida, por lo que canceló.",
       "cuando": "18 de julio de 2026, 09:30 h",
       "donde": "Lugar de residencia en España — Buenos Aires, Argentina",
       "como": "Comunicó la cancelación a la agencia y a los proveedores en cuanto se produjo la causa, y recibió la liquidación de los gastos de cancelación aplicados. Referencia oficial: CAN-BUE-48663.",
@@ -6336,7 +6336,7 @@
         "ok": false
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -6527,7 +6527,7 @@
         "ok": false
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -6722,7 +6722,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -7074,7 +7074,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -9320,7 +9320,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -9504,7 +9504,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -11677,7 +11677,7 @@
     "situacion": {
       "nombre": "Repatriación o evacuación con autorización previa",
       "porcentaje": 100,
-      "condicion": "Traslado sanitario o de restos mortales autorizado por la Central."
+      "condicion": "Traslado sanitario autorizado por la Central."
     },
     "calculo": {
       "reclamado": 26153,
@@ -11780,7 +11780,7 @@
   },
   {
     "id": "CLM-0065",
-    "tipoReclamacion": "Repatriación de restos",
+    "tipoReclamacion": "Traslado en ambulancia aérea",
     "nombreCliente": "Rubén Navarro Domínguez",
     "dniCliente": "50162553J",
     "email": "ruben.navarro72@example.com",
@@ -11814,15 +11814,15 @@
       "un amigo"
     ],
     "glosa": [
-      "El 22 de septiembre de 2026 a las 23:45 h, en París (Francia), concretamente en «Aeropuerto de París», Rubén Navarro Domínguez (DNI 50162553J), titular de la póliza, que viajaba junto a un compañero de viaje y un amigo del 17 de septiembre de 2026 al 6 de octubre de 2026, vivió el siguiente suceso: tras el fallecimiento del asegurado, la familia solicitó llevar sus restos a casa para que descansara en el panteón familiar y pudiera ser recordado en la ofrenda del Día de Muertos, con flores de cempasúchil, velas y su fotografía.",
-      "Declaración del asegurado: «Mi abuelo murió lejos y queremos traerlo a casa para ponerle su foto, sus flores de cempasúchil y su ofrenda en la noche de los muertos.»",
+      "El 22 de septiembre de 2026 a las 23:45 h, en París (Francia), concretamente en «Aeropuerto de París», Rubén Navarro Domínguez (DNI 50162553J), titular de la póliza, que viajaba junto a un compañero de viaje y un amigo del 17 de septiembre de 2026 al 6 de octubre de 2026, vivió el siguiente suceso: tras un accidente de avioneta, el asegurado quedó aislado en una isla desierta, hablando con un balón de voleibol al que llamó como a un amigo, hasta que fue localizado y evacuado en ambulancia aérea hasta el hospital.",
+      "Declaración del asegurado: «Mi avioneta cayó en una isla perdida, pasé años solo hablando con un balón y por fin me sacaron en una ambulancia aérea.»",
       "La Central de Asistencia fue avisada, se coordinó el traslado con el equipo médico y se emitió el informe de aptitud para el transporte. Referencia oficial: INF-PAR-56179.",
       "El asegurado ingresó la reclamación el 27 de octubre de 2026 por web, 35 días después del suceso, solicitando el reembolso de 9.322 € según el desglose (acompañante sanitario: 4.257 €; traslado terrestre: 5.065 €). La cobertura aplicable es «Repatriación y evacuación» (límite 100.000 €, franquicia 100 €) según la cláusula C-06 del plan Estándar. Situación: «Repatriación o evacuación con autorización previa», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada."
     ],
-    "declaracion": "Mi abuelo murió lejos y queremos traerlo a casa para ponerle su foto, sus flores de cempasúchil y su ofrenda en la noche de los muertos.",
+    "declaracion": "Mi avioneta cayó en una isla perdida, pasé años solo hablando con un balón y por fin me sacaron en una ambulancia aérea.",
     "hechos": {
       "quien": "Rubén Navarro Domínguez (DNI 50162553J), junto a un compañero de viaje y un amigo",
-      "que": "Tras el fallecimiento del asegurado, la familia solicitó llevar sus restos a casa para que descansara en el panteón familiar y pudiera ser recordado en la ofrenda del Día de Muertos, con flores de cempasúchil, velas y su fotografía.",
+      "que": "Tras un accidente de avioneta, el asegurado quedó aislado en una isla desierta, hablando con un balón de voleibol al que llamó como a un amigo, hasta que fue localizado y evacuado en ambulancia aérea hasta el hospital.",
       "cuando": "22 de septiembre de 2026, 23:45 h",
       "donde": "Aeropuerto de París — París, Francia",
       "como": "La Central de Asistencia fue avisada, se coordinó el traslado con el equipo médico y se emitió el informe de aptitud para el transporte. Referencia oficial: INF-PAR-56179.",
@@ -11848,7 +11848,7 @@
     "situacion": {
       "nombre": "Repatriación o evacuación con autorización previa",
       "porcentaje": 100,
-      "condicion": "Traslado sanitario o de restos mortales autorizado por la Central."
+      "condicion": "Traslado sanitario autorizado por la Central."
     },
     "calculo": {
       "reclamado": 9322,
@@ -12037,7 +12037,7 @@
     "situacion": {
       "nombre": "Repatriación o evacuación con autorización previa",
       "porcentaje": 100,
-      "condicion": "Traslado sanitario o de restos mortales autorizado por la Central."
+      "condicion": "Traslado sanitario autorizado por la Central."
     },
     "calculo": {
       "reclamado": 11352,
@@ -12892,7 +12892,7 @@
   },
   {
     "id": "CLM-0071",
-    "tipoReclamacion": "Muerte accidental",
+    "tipoReclamacion": "Fractura durante una excursión",
     "nombreCliente": "Irene Díaz Moreno",
     "dniCliente": "81286543N",
     "email": "irene.diaz7@example.com",
@@ -12923,15 +12923,15 @@
     },
     "acompanantes": [],
     "glosa": [
-      "El 20 de septiembre de 2026 a las 22:30 h, en Roma (Italia), concretamente en «Avenida principal de Roma», Irene Díaz Moreno (DNI 81286543N), titular de la póliza, que viajaba en solitario del 18 de septiembre de 2026 al 23 de septiembre de 2026, vivió el siguiente suceso: tras librarse por muy poco de un accidente a bordo gracias a una premonición que hizo que varios pasajeros bajaran a tiempo, una cadena de casualidades improbables acabó con la vida del asegurado; sus beneficiarios reclaman la prestación.",
-      "Declaración del asegurado: «Mi hermano se salvó de milagro del accidente por una premonición, pero la muerte lo alcanzó después por una cadena de casualidades increíble.»",
+      "El 20 de septiembre de 2026 a las 22:30 h, en Roma (Italia), concretamente en «Avenida principal de Roma», Irene Díaz Moreno (DNI 81286543N), titular de la póliza, que viajaba en solitario del 18 de septiembre de 2026 al 23 de septiembre de 2026, vivió el siguiente suceso: el asegurado, con sombrero y látigo de aventurero, se internó en una excavación en busca de un tesoro antiguo, cayó por un foso lleno de trampas y se fracturó una pierna; tuvo que ser atendido y rehabilitado.",
+      "Declaración del asegurado: «Iba tras un tesoro perdido con mi sombrero y mi látigo, caí en un foso de trampas y me rompí la pierna.»",
       "Fue atendido en el lugar y trasladado al centro médico; se levantó el parte del accidente y se emitió el informe médico con el pronóstico y el tratamiento. Referencia oficial: INF-ROM-51347.",
-      "El asegurado ingresó la reclamación el 2 de octubre de 2026 por app móvil, 12 días después del suceso, solicitando el reembolso de 9.570 € según el desglose (material ortopédico: 4.195 €; transporte y traslados: 5.375 €). La cobertura aplicable es «Accidentes personales» (límite 10.000 €, franquicia 100 €) según la cláusula C-07 del plan Básico. Situación: «Fallecimiento accidental», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada."
+      "El asegurado ingresó la reclamación el 2 de octubre de 2026 por app móvil, 12 días después del suceso, solicitando el reembolso de 9.570 € según el desglose (material ortopédico: 4.195 €; transporte y traslados: 5.375 €). La cobertura aplicable es «Accidentes personales» (límite 10.000 €, franquicia 100 €) según la cláusula C-07 del plan Básico. Situación: «Gastos de asistencia por accidente», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada."
     ],
-    "declaracion": "Mi hermano se salvó de milagro del accidente por una premonición, pero la muerte lo alcanzó después por una cadena de casualidades increíble.",
+    "declaracion": "Iba tras un tesoro perdido con mi sombrero y mi látigo, caí en un foso de trampas y me rompí la pierna.",
     "hechos": {
       "quien": "Irene Díaz Moreno (DNI 81286543N), en solitario",
-      "que": "Tras librarse por muy poco de un accidente a bordo gracias a una premonición que hizo que varios pasajeros bajaran a tiempo, una cadena de casualidades improbables acabó con la vida del asegurado; sus beneficiarios reclaman la prestación.",
+      "que": "El asegurado, con sombrero y látigo de aventurero, se internó en una excavación en busca de un tesoro antiguo, cayó por un foso lleno de trampas y se fracturó una pierna; tuvo que ser atendido y rehabilitado.",
       "cuando": "20 de septiembre de 2026, 22:30 h",
       "donde": "Avenida principal de Roma — Roma, Italia",
       "como": "Fue atendido en el lugar y trasladado al centro médico; se levantó el parte del accidente y se emitió el informe médico con el pronóstico y el tratamiento. Referencia oficial: INF-ROM-51347.",
@@ -12955,9 +12955,9 @@
       "clausula": "C-07"
     },
     "situacion": {
-      "nombre": "Fallecimiento accidental",
+      "nombre": "Gastos de asistencia por accidente",
       "porcentaje": 100,
-      "condicion": "Capital contratado para los beneficiarios."
+      "condicion": "Atención médica y rehabilitación."
     },
     "calculo": {
       "reclamado": 9570,
@@ -15339,7 +15339,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -15435,7 +15435,7 @@
   },
   {
     "id": "CLM-0085",
-    "tipoReclamacion": "Cancelación por fallecimiento familiar",
+    "tipoReclamacion": "Cancelación por nacimiento adelantado",
     "nombreCliente": "Miguel Domínguez García",
     "dniCliente": "52339391Q",
     "email": "miguel.dominguez0@example.com",
@@ -15469,15 +15469,15 @@
       "su hija"
     ],
     "glosa": [
-      "Miguel Domínguez García (DNI 52339391Q), titular de la póliza, tenía contratado un viaje a Marrakech (Marruecos) del 3 de febrero de 2026 al 12 de febrero de 2026, junto a un amigo y su hija, alojado en el Hotel Riad Medina Rosa. El 23 de enero de 2026, el asegurado tenía previsto asistir a varias bodas durante el viaje, pero el fallecimiento de un familiar cercano hizo coincidir el funeral con las fechas de salida, por lo que canceló.",
-      "Declaración del asegurado: «Iba a cuatro bodas con el viaje, pero un familiar falleció y el funeral coincidió con la salida; tuve que cancelar.»",
+      "Miguel Domínguez García (DNI 52339391Q), titular de la póliza, tenía contratado un viaje a Marrakech (Marruecos) del 3 de febrero de 2026 al 12 de febrero de 2026, junto a un amigo y su hija, alojado en el Hotel Riad Medina Rosa. El 23 de enero de 2026, el asegurado tenía previsto asistir a varias bodas durante el viaje, pero el hijo de su pareja nació semanas antes de lo previsto, justo en los días de salida, por lo que canceló.",
+      "Declaración del asegurado: «Iba a cuatro bodas con el viaje, pero mi pareja se puso de parto tres semanas antes y tuve que cancelar.»",
       "Comunicó la cancelación a la agencia y a los proveedores en cuanto se produjo la causa, y recibió la liquidación de los gastos de cancelación aplicados. Referencia oficial: CAN-MAR-97965.",
       "El asegurado ingresó la reclamación el 25 de enero de 2026 por app móvil, 2 días después del suceso, solicitando el reembolso de 6.333 € según el desglose (alojamiento no reembolsable: 1.848 €; gastos de cancelación de la agencia: 2.163 €; vuelos no reembolsables: 2.322 €). La cobertura aplicable es «Cancelación de viaje» (límite 5.000 €, franquicia 50 €) según la cláusula C-09 del plan Estándar. Situación: «Cancelación por causa grave documentada», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada."
     ],
-    "declaracion": "Iba a cuatro bodas con el viaje, pero un familiar falleció y el funeral coincidió con la salida; tuve que cancelar.",
+    "declaracion": "Iba a cuatro bodas con el viaje, pero mi pareja se puso de parto tres semanas antes y tuve que cancelar.",
     "hechos": {
       "quien": "Miguel Domínguez García (DNI 52339391Q), junto a un amigo y su hija",
-      "que": "El asegurado tenía previsto asistir a varias bodas durante el viaje, pero el fallecimiento de un familiar cercano hizo coincidir el funeral con las fechas de salida, por lo que canceló.",
+      "que": "El asegurado tenía previsto asistir a varias bodas durante el viaje, pero el hijo de su pareja nació semanas antes de lo previsto, justo en los días de salida, por lo que canceló.",
       "cuando": "23 de enero de 2026, 21:10 h",
       "donde": "Domicilio del asegurado — Marrakech, Marruecos",
       "como": "Comunicó la cancelación a la agencia y a los proveedores en cuanto se produjo la causa, y recibió la liquidación de los gastos de cancelación aplicados. Referencia oficial: CAN-MAR-97965.",
@@ -15524,7 +15524,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -15699,7 +15699,7 @@
         "ok": false
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -15884,7 +15884,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": true
       },
       {
@@ -16241,7 +16241,7 @@
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Justificante documental de la causa (informe médico, certificado oficial, carta de despido…)",
         "ok": false
       },
       {
