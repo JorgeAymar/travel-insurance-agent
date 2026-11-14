@@ -24,6 +24,12 @@ una persona; el agente añade un comentario con lo que hay que comprobar). Todos
 | **Pydantic AI** | Una sola consulta con salida tipada (modelos Pydantic) y reintento automático si la salida no valida. |
 | **Claude Agent SDK** | El agente *no* recibe los datos: los busca y lee él con `Read`/`Grep`, en copias saneadas dentro de una carpeta temporal. |
 
+**Criterio de decisión** (el mismo para el revisor por reglas y los tres agentes): (1) el pago de la prima de la
+póliza está al día; (2) la reclamación se valida contra las cláusulas del seguro (póliza en vigor, cobertura
+incluida, situación con derecho a pago, plazo, documentación, requisitos de la cobertura y exclusiones); (3) se
+decide: se paga (Aprobado), no se paga (Rechazado) o se debe revisar a mano (Validar). El agente no juzga si la
+historia es verosímil o extraña.
+
 Cada ficha tiene un botón por tecnología y **Ejecutar las 3 y comparar**, que muestra veredicto, importe, duración,
 llamadas, tokens, acuerdo con el revisor por reglas y una matriz por línea con las discrepancias resaltadas. El
 listado tiene un selector de tecnología y un botón *Revisar* en cada fila. También hay dos arquitecturas de línea

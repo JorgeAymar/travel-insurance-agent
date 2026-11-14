@@ -24,6 +24,11 @@ what to check). All data is fictitious.
 | **Pydantic AI** | One call with typed output (Pydantic models) and automatic retry on invalid output. |
 | **Claude Agent SDK** | The agent is *not* given the data: it searches and reads the JSON files itself with `Read`/`Grep`, in sanitized copies inside a temporary folder. |
 
+**Decision criterion** (the same for the rules reviewer and the three agents): (1) the policy premium payments are up
+to date; (2) the claim is validated against the insurance clauses (policy in force, coverage included, payout
+situation, deadline, documents, coverage requirements, exclusions); (3) the outcome is *pay* (Approved), *do not
+pay* (Rejected) or *review by hand* (Validate). The agent does not judge whether the story is plausible or unusual.
+
 Each claim sheet has a button per technology, plus **Run all 3 and compare**, which shows verdict, payout, duration,
 calls, tokens, agreement with the rules reviewer, and a per-line matrix highlighting disagreements. The list page
 has a technology picker and a *Review* button on every row. Two baseline architectures (line by line, single call)
@@ -71,7 +76,7 @@ python3 -m unittest discover -s tests                                     # regr
 ```
 
 Agreement with the rules reviewer is a reference, not ground truth: the rules reviewer is deterministic but does not
-judge exclusions or story coherence, and LLM verdicts can vary between runs even at temperature 0.
+judge the clause exclusions (only the LLM does, and it never rejects on its own), and LLM verdicts can vary between runs even at temperature 0.
 
 ## Safety: nothing private goes to GitHub
 
