@@ -35,6 +35,8 @@ llamadas, tokens, acuerdo con el revisor por reglas y una matriz por línea con 
 listado tiene un selector de tecnología y un botón *Revisar* en cada fila. También hay dos arquitecturas de línea
 base (línea por línea y una sola llamada) y un revisor determinista por reglas.
 
+**Página de análisis** (`/analisis`): ejecuta las tres tecnologías de forma secuencial (una corrida cada vez) sobre las primeras N reclamaciones, donde N lo fija un campo numérico (por defecto `ANALISIS_RECLAMACIONES_DEFECTO`), y las compara con la referencia: acierto, aprobaciones indebidas, matrices de confusión, acierto por comprobación, en cuáles coinciden las tres y la causa de cada error. Se calcula en vivo en el navegador y también es virtual.
+
 ## Los resultados del agente son virtuales
 
 Los resultados se emiten al navegador mientras se calculan y viven **solo en la página**. No se guarda nada en

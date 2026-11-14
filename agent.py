@@ -424,7 +424,7 @@ def _correr(motor, modelo, arq, claim, policy, clauses, on_progress, pausa):
     return {**veredicto, "lineas": lineas, "agente": info, "stats": stats}
 
 
-def revisar(claim, policy, clauses, on_progress=None, motor=None, modelo=None, arquitectura=None):
+def revisar(claim, policy, clauses, on_progress=None, motor=None, modelo=None, arquitectura=None, pausa=None):
     """Ejecuta la revisión y devuelve el resultado con sus estadísticas.
 
     on_progress(lineas, fase) se llama cada vez que cambia el estado de una línea.
@@ -438,7 +438,7 @@ def revisar(claim, policy, clauses, on_progress=None, motor=None, modelo=None, a
         arq = "lineas"
     if arq == "claude_sdk" and motor == "claude":
         motor = "ollama"  # el Claude Agent SDK usa el mismo LLM de Ollama que las demás tecnologías
-    pausa = cfg.decimal("AGENT_STEP_DELAY")
+    pausa = cfg.decimal("AGENT_STEP_DELAY") if pausa is None else pausa  # pausa=0: sin esperas (referencia)
     fallback = False
     try:
         resultado = _correr(motor, modelo, arq, claim, policy, clauses, on_progress, pausa)

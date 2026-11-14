@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Análisis{% endblock %}
+{% block content %}
+<div class="crumbs">Inicio › Agente de revisión › <b>Análisis</b></div>
+<h1>Análisis de las reclamaciones</h1>
+<p class="sub">Ejecuta las 3 tecnologías sobre las reclamaciones y compáralas con la referencia (el revisor por reglas, verificado contra las cláusulas).
+  <b>🔒 Los resultados son solo virtuales:</b> viven en esta página, no se guardan y desaparecen al refrescar.</p>
+
+<section class="card pad" id="ana-ctl">
+  <div class="ana-ctl">
+    <label>Máximo de reclamaciones a analizar
+      <input type="number" id="ana-n" min="1" max="{{ total }}" step="1" value="{{ por_defecto }}" inputmode="numeric" aria-describedby="ana-n-ayuda">
+      <small id="ana-n-ayuda">entre 1 y {{ total }}</small></label>
+    {% if modelos %}<label>Modelo (las 3 tecnologías)
+      <select id="ana-modelo">{% for m in modelos %}<option value="{{ m }}" {{ 'selected' if m == modelo_def }}>{{ m }}</option>{% endfor %}</select></label>{% endif %}
+    <button id="ana-iniciar" class="primary">Ejecutar el análisis</button>
+    <button id="ana-parar" class="ghost-btn" hidden>Detener</button>
+  </div>
+  <p class="muted small" id="ana-aviso">Hay {{ total }} reclamaciones y el campo de la izquierda limita cuántas se ejecutan (se toman las primeras). Cada una se revisa con las 3 tecnologías, <b>una corrida cada vez</b> (secuencial, sin solapar):
+    Pydantic AI → Claude Agent SDK → LangGraph, reclamación a reclamación, y al final se repite lo que haya fallado. Unos 1 a 2 minutos por reclamación.</p>
+  <p id="ana-fase" class="muted" hidden></p>
+  <div id="ana-prog" class="ana-prog"></div>
+</section>
+
+<div id="ana-resultados" hidden>
+  <section class="card pad"><h2>Acierto frente a la referencia</h2><div id="ana-resumen"></div></section>
+  <section class="card pad"><h2>¿Decidieron igual las 3?</h2><div id="ana-igual"></div></section>
+  <section class="card pad"><h2>Matrices de confusión</h2><div id="ana-conf" class="ana-conf"></div></section>
+  <section class="card pad"><h2>Acierto por tipo de comprobación</h2><div id="ana-lineas"></div></section>
+  <section class="card">
+    <div class="card-h"><b>Lista de reclamaciones</b><label class="small"><input type="checkbox" id="ana-solo-dif"> Solo donde no coinciden las 3 o difieren de la referencia</label></div>
+    <div class="scroll"><table id="ana-tabla"></table></div>
+  </section>
+  <section class="card pad"><h2>Errores de veredicto y su causa</h2><div id="ana-errores"></div></section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='agente.js') }}"></script>
+<script src="{{ url_for('static', filename='analisis.js') }}"></script>
+{% endblock %}

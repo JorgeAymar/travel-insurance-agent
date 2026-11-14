@@ -9,7 +9,7 @@
 <body>
 <header class="top">
   <div class="brand"><span class="logo">⛨</span><div><b>{{ app_name }}</b><small>{{ app_tagline }}</small></div></div>
-  <nav><a class="{{ 'on' if request.endpoint in ('index', 'detail') }}" href="{{ url_for('index') }}">Reclamaciones</a><a class="{{ 'on' if request.endpoint in ('policies', 'policy_detail') }}" href="{{ url_for('policies') }}">Pólizas</a><a>Proveedores</a><a>Informes</a></nav>
+  <nav><a class="{{ 'on' if request.endpoint in ('index', 'detail') }}" href="{{ url_for('index') }}">Reclamaciones</a><a class="{{ 'on' if request.endpoint in ('policies', 'policy_detail') }}" href="{{ url_for('policies') }}">Pólizas</a><a>Proveedores</a><a class="{{ 'on' if request.endpoint == 'analysis_page' }}" href="{{ url_for('analysis_page') }}">Análisis</a></nav>
   <div class="user"><div><b>{{ user_name }}</b><small>{{ user_role }}</small></div><span class="avatar">{{ user_initials }}</span></div>
 </header>
 <main>{% block content %}{% endblock %}</main>

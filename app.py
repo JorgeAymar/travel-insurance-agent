@@ -193,6 +193,30 @@ def start_review(claim_id):
                     headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
+@app.route("/analisis")
+def analysis_page():
+    """Análisis de las reclamaciones: ejecuta las 3 tecnologías y las compara con la referencia, todo en el navegador."""
+    total = len(load_claims())
+    return render_template("analisis.html", modelos=agent.listar_modelos(), modelo_def=cfg.opcional("OLLAMA_MODEL"),
+                           total=total, por_defecto=max(1, min(cfg.entero("ANALISIS_RECLAMACIONES_DEFECTO"), total)))
+
+
+@app.route("/api/referencia")
+def api_referencia():
+    """Veredicto del revisor por reglas de cada reclamación: la referencia con la que se mide a los agentes.
+
+    Se calcula en el momento (son milisegundos) y no se guarda en ningún sitio.
+    """
+    clauses = load_clauses()
+    pols = {p["numero"]: p for p in load_policies()}
+    salida = []
+    for c in load_claims():
+        r = agent.revisar(c, pols[c["numeroPoliza"]], clauses, motor="reglas", pausa=0)
+        salida.append({"id": c["id"], "tipo": c["tipoReclamacion"], "veredicto": r["veredicto"], "importe": r["importeAPagar"],
+                       "lineas": {l["id"]: l["estado"] for l in r["lineas"]}})
+    return jsonify(salida)
+
+
 @app.route("/polizas")
 def policies():
     claims = load_claims()

@@ -55,6 +55,8 @@ python3 app.py               # escucha en el HOST y PORT del .env
 | `/reclamaciones/<id>` | **Ficha** de una reclamación; se abre al hacer clic en una fila |
 | `/polizas` | Listado de pólizas con búsqueda por póliza, tomador o DNI y filtro por plan |
 | `/polizas/<número>` | Ficha de póliza: requisitos de pago, coberturas, cláusulas, pagos y reclamaciones |
+| `/analisis` | **Análisis de las reclamaciones**: un campo numérico limita cuántas se ejecutan (valor inicial `ANALISIS_RECLAMACIONES_DEFECTO`, entre 1 y el total; si pones algo fuera de rango se ajusta). Ejecuta las 3 tecnologías **de forma secuencial** (una corrida cada vez: Pydantic AI → Claude Agent SDK → LangGraph, reclamación a reclamación; al final repite lo que haya fallado) y las compara con la referencia: acierto, aprobaciones indebidas, matrices de confusión, acierto por comprobación, lista con las discrepancias y la causa de cada error. Todo en el navegador y virtual |
+| `/api/referencia` | Veredicto del revisor por reglas de cada reclamación (la referencia del análisis); se calcula al momento y no se guarda |
 | `/reclamaciones/<id>/revision` (POST) | Ejecuta UNA revisión y la emite en directo (una línea JSON por evento). Exige `{"arquitectura": ...}`; si no, 400. Máximo `MAX_CORRIDAS_SIMULTANEAS` a la vez (429 si se supera) |
 | `/api/claims`, `/api/policies`, `/api/clauses` | Los datos en JSON |
 
@@ -198,6 +200,7 @@ Al terminar cada corrida se sabe cuánto ha costado:
 - **En la ficha**: bajo el veredicto, una línea con la duración, la tecnología, las llamadas y los tokens; debajo, el detalle (tiempo por línea, acuerdo con las reglas).
 - **En el listado**: cada fila muestra su tecnología, duración y llamadas, y un panel resume lo procesado en esa página (veredictos, duración total, media, mediana y máximo, llamadas, tokens, acuerdo con las reglas y corridas que cayeron a reglas).
 - **Comparación de las 3 tecnologías** (ficha): veredicto, importe, duración (marca la más rápida), llamadas, tokens, acuerdo con las reglas, motivo y una matriz de resultado por línea con las discrepancias resaltadas, más la lista de corridas hechas en esa página.
+- **Página de análisis (`/analisis`)**: ejecuta las 3 tecnologías sobre las primeras N reclamaciones (N lo fija un campo, por defecto 10) una corrida cada vez, y calcula en vivo el acierto frente a la referencia, las aprobaciones indebidas, las matrices de confusión, el acierto por comprobación, si las 3 coinciden y la causa de cada error. Unos 1 a 2 minutos por reclamación; nada se guarda.
 - **`bench.py`**: para comparar muchas reclamaciones a la vez; resume mediana, p95, llamadas, tokens y acuerdo por arquitectura y modelo, en pantalla, sin guardar nada.
 
 Para comparar con justicia hay que usar las **mismas reclamaciones** en todas las variantes:
@@ -221,6 +224,7 @@ Todo valor variable está en el `.env`; el código no tiene valores por defecto.
 | `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE` | Rutas de los tres JSON de datos (relativas al proyecto o absolutas) |
 | `MAX_RECLAMACIONES` | Tope de reclamaciones que carga la app (y que acepta el generador) |
 | `MAX_CORRIDAS_SIMULTANEAS` | Revisiones que pueden correr a la vez; la siguiente recibe 429 |
+| `ANALISIS_RECLAMACIONES_DEFECTO` | Valor inicial del campo «máximo de reclamaciones» de la página de análisis |
 | `AGENT_MODE` | `reglas`, `ollama`, `claude` o `auto` (claude si hay clave; si no, ollama si está configurado; si no, reglas) |
 | `AGENT_ARCH` | Arquitectura por defecto: `lineas` o `una_llamada` (las 3 tecnologías se eligen con sus botones) |
 | `AGENT_STEP_DELAY` | Pausa (s) entre líneas del revisor por reglas, para que se vea cómo se marcan |

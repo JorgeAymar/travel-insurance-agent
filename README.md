@@ -34,6 +34,8 @@ calls, tokens, agreement with the rules reviewer, and a per-line matrix highligh
 has a technology picker and a *Review* button on every row. Two baseline architectures (line by line, single call)
 and a deterministic rules reviewer are also included.
 
+**Analysis page** (`/analisis`): runs the three technologies sequentially (one run at a time) on the first N claims, where N is set by a number field (default `ANALISIS_RECLAMACIONES_DEFECTO`), and compares them with the reference: accuracy, wrongly approved claims, confusion matrices, accuracy per check, which claims all three agree on, and the cause of each error. It is computed live in the browser and is virtual too.
+
 ## Agent results are virtual
 
 Results are streamed to the browser while they are computed and live **only in the page**. Nothing is written to a
