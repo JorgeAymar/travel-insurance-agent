@@ -51,7 +51,7 @@ python3 app.py               # escucha en el HOST y PORT del .env
 
 | Ruta | Qué muestra |
 |---|---|
-| `/` | Listado de reclamaciones (máximo `MAX_RECLAMACIONES`) con buscador (ID, tipo, cliente, póliza, destino y texto del relato, sin distinguir mayúsculas ni acentos), filtro por tipo, orden por columna y paginación. Permite elegir con qué tecnología se procesa y revisar desde cada fila |
+| `/` | Listado de reclamaciones (máximo `MAX_RECLAMACIONES`) con buscador (ID, tipo, cliente, póliza, destino y texto del relato, sin distinguir mayúsculas ni acentos), filtro por tipo, orden por columna y paginación. Permite elegir con qué tecnología se procesa, revisar desde cada fila y **revisar en lote**: el campo «Máximo de reclamaciones a revisar» (valor inicial `ANALISIS_RECLAMACIONES_DEFECTO`, entre 1 y el total del listado filtrado) y el botón «Revisar las primeras N» revisan en secuencia, con el agente elegido, las primeras N del listado filtrado, aunque no estén en la página actual; hay un botón «Detener» |
 | `/reclamaciones/<id>` | **Ficha** de una reclamación; se abre al hacer clic en una fila |
 | `/polizas` | Listado de pólizas con búsqueda por póliza, tomador o DNI y filtro por plan |
 | `/polizas/<número>` | Ficha de póliza: requisitos de pago, coberturas, cláusulas, pagos y reclamaciones |
@@ -224,7 +224,7 @@ Todo valor variable está en el `.env`; el código no tiene valores por defecto.
 | `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE` | Rutas de los tres JSON de datos (relativas al proyecto o absolutas) |
 | `MAX_RECLAMACIONES` | Tope de reclamaciones que carga la app (y que acepta el generador) |
 | `MAX_CORRIDAS_SIMULTANEAS` | Revisiones que pueden correr a la vez; la siguiente recibe 429 |
-| `ANALISIS_RECLAMACIONES_DEFECTO` | Valor inicial del campo «máximo de reclamaciones» de la página de análisis |
+| `ANALISIS_RECLAMACIONES_DEFECTO` | Valor inicial del campo «máximo de reclamaciones» del listado y de la página de análisis |
 | `AGENT_MODE` | `reglas`, `ollama`, `claude` o `auto` (claude si hay clave; si no, ollama si está configurado; si no, reglas) |
 | `AGENT_ARCH` | Arquitectura por defecto: `lineas` o `una_llamada` (las 3 tecnologías se eligen con sus botones) |
 | `AGENT_STEP_DELAY` | Pausa (s) entre líneas del revisor por reglas, para que se vea cómo se marcan |
