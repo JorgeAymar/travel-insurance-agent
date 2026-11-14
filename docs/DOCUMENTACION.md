@@ -139,9 +139,9 @@ El análisis es el mismo para el revisor por reglas y para los tres agentes con 
 2. **La reclamación se valida contra las cláusulas del seguro**: póliza en vigor, cobertura incluida en el plan, situación con derecho a pago (% de pago mayor que 0), plazo de reclamación, documentación completa, requisitos específicos de la cobertura y exclusiones.
 3. **Se decide**: se paga (**Aprobado**, con el importe a pagar), no se paga (**Rechazado**) o se debe **revisar a mano** (**Validar**, con un comentario del agente).
 
-Rechazado solo si falla con claridad un requisito bloqueante: prima impagada, póliza fuera de vigencia, cobertura no incluida, situación sin derecho a pago (0 %) o fuera de plazo. Validar si falta documentación, un requisito de la cobertura no está acreditado, hay una exclusión que podría aplicar (ese juicio lo hace el LLM y por eso **nunca rechaza por sí solo**: una persona lo confirma) o el importe supera `IMPORTE_ALTO_VALIDAR`.
+Rechazado solo si falla con claridad un requisito bloqueante: prima impagada, póliza fuera de vigencia, cobertura no incluida, situación sin derecho a pago (0 %) o fuera de plazo. Validar si falta documentación, un requisito de la cobertura no está acreditado o hay una exclusión que podría aplicar (ese juicio lo hace el LLM y por eso **nunca rechaza por sí solo**: una persona lo confirma).
 
-El agente **no juzga si la historia es verosímil, extraña o dramática**: eso no es un criterio del seguro. Esa regla de importe alto es la única comprobación añadida; se desactiva con `IMPORTE_ALTO_VALIDAR=0`.
+El agente **no juzga si la historia es verosímil, extraña o dramática**, ni aplica ninguna regla que no salga de las cláusulas (por ejemplo, no hay umbral de importe alto). El plazo de reclamación se lee de la cláusula de la cobertura, no del `.env`.
 
 # 7. Datos de ejemplo
 
@@ -221,8 +221,6 @@ Todo valor variable está en el `.env`; el código no tiene valores por defecto.
 | `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE` | Rutas de los tres JSON de datos (relativas al proyecto o absolutas) |
 | `MAX_RECLAMACIONES` | Tope de reclamaciones que carga la app (y que acepta el generador) |
 | `MAX_CORRIDAS_SIMULTANEAS` | Revisiones que pueden correr a la vez; la siguiente recibe 429 |
-| `IMPORTE_ALTO_VALIDAR` | Desde este importe (€) una persona debe validar; 0 desactiva la regla |
-| `PLAZO_RECLAMACION_DIAS` | Días máximos entre el suceso y la reclamación |
 | `AGENT_MODE` | `reglas`, `ollama`, `claude` o `auto` (claude si hay clave; si no, ollama si está configurado; si no, reglas) |
 | `AGENT_ARCH` | Arquitectura por defecto: `lineas` o `una_llamada` (las 3 tecnologías se eligen con sus botones) |
 | `AGENT_STEP_DELAY` | Pausa (s) entre líneas del revisor por reglas, para que se vea cómo se marcan |
@@ -268,7 +266,7 @@ veredicto + estadísticas ◄────────  evento «fin»           
                                                                               └► veredicto → salvaguardas → estadísticas
 ```
 
-1. **Líneas a comprobar.** `construir_lineas` genera los requisitos del caso: 6 generales de la cláusula G-07 (póliza en vigor, prima al día, cobertura incluida, situación con derecho a pago, plazo, documentación), los requisitos específicos de la cobertura, el límite y el importe alto. Para los LLM se añade una línea más, las exclusiones de las cláusulas (que solo puede juzgar el LLM): 13 líneas frente a 12 del revisor por reglas.
+1. **Líneas a comprobar.** `construir_lineas` genera los requisitos del caso: 6 generales de la cláusula G-07 (póliza en vigor, prima al día, cobertura incluida, situación con derecho a pago, plazo, documentación), los requisitos específicos de la cobertura y el límite. Para los LLM se añade una línea más, las exclusiones de las cláusulas (que solo puede juzgar el LLM): 12 líneas frente a 11 del revisor por reglas.
 2. **Ejecución.** `_correr` elige la arquitectura. Las tres tecnologías viven en módulos `arq_<nombre>.py` que se importan al usarse y cumplen un contrato común (ver el comentario en `agent.py`).
 3. **Veredicto.** El revisor por reglas rechaza si falla un requisito bloqueante, pide validar si falla uno no bloqueante y aprueba en el resto. Con un LLM, el veredicto se ajusta si contradice las líneas: no puede aprobar con líneas sin cumplir, ni rechazar sin una línea bloqueante incumplida, y «Validar» siempre lleva comentario. La línea de exclusiones no es bloqueante: si parece aplicar, el caso pasa a «Validar».
 4. **Estadísticas.** Cada corrida mide duración, llamadas, tokens, tiempo por línea y su acuerdo con el revisor por reglas, que se ejecuta aparte como referencia.

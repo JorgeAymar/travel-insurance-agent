@@ -50,10 +50,19 @@ def _eur(v):
 
 
 # --------------------------------------------------------------------------- líneas a analizar
-def construir_lineas(claim, policy):
+def _plazo(claim, clauses):
+    """Plazo máximo (días) para reclamar, tal como lo fija la cláusula de la cobertura (o, si no hay, la G-02)."""
+    for codigo in (claim["cobertura"].get("clausula"), "G-02"):
+        clausula = clauses.get(codigo)
+        if clausula and clausula.get("plazoReclamacionDias"):
+            return int(clausula["plazoReclamacionDias"])
+    raise ValueError("ninguna cláusula define el plazo de reclamación")
+
+
+def construir_lineas(claim, policy, clauses):
     """Lista de líneas a revisar. Cada una trae su criterio y, si procede, su regla determinista."""
     inc = claim["incidente"]["fecha"]
-    importe_alto, plazo = cfg.entero("IMPORTE_ALTO_VALIDAR"), cfg.entero("PLAZO_RECLAMACION_DIAS")
+    plazo = _plazo(claim, clauses)
     cuotas_vencidas = [q for q in policy["pagos"] if q["fecha"] <= inc]
     impagadas = [q for q in cuotas_vencidas if q["estado"] != "Pagado"]
     dias_ingreso = _dias(inc, claim["fechaIngreso"])
@@ -108,11 +117,6 @@ def construir_lineas(claim, policy):
              criterio="calculo.trasPorcentaje (importe tras aplicar el %) frente a calculo.limite. Si lo supera, solo se paga hasta el límite (no es motivo de rechazo).",
              regla=lambda: ("cumple", f"{_eur(calc['trasPorcentaje'])} tras aplicar el {sit['porcentaje']} % frente a un límite de {_eur(calc['limite'])}."
                             + ("" if calc["trasPorcentaje"] <= calc["limite"] else " Se pagaría solo hasta el límite."))),
-        dict(id="importe", grupo="General", bloqueante=False, valida=True,
-             requisito=f"Importe que no requiere validación humana (menos de {_eur(importe_alto)})",
-             criterio=f"Si importeReclamado es {importe_alto} € o más, debe validarlo una persona (estado «duda»).",
-             regla=lambda: ("cumple", f"Importe reclamado: {_eur(claim['importeReclamado'])}.") if claim["importeReclamado"] < importe_alto
-             else ("duda", f"Importe reclamado de {_eur(claim['importeReclamado'])}: requiere validación humana.")),
         # Exclusiones de las cláusulas: solo las puede juzgar el LLM. Al ser un juicio no determinista, no rechaza por
         # su cuenta (bloqueante=False): si una exclusión parece aplicar, el caso pasa a «Validar» (revisar a mano).
         dict(id="exclusiones", grupo="Cláusulas", bloqueante=False, valida=True, solo_llm=True,
@@ -122,8 +126,6 @@ def construir_lineas(claim, policy):
                        "no valores si la historia es verosímil o extraña."),
              regla=None),
     ]
-    if importe_alto <= 0:  # IMPORTE_ALTO_VALIDAR=0 desactiva la regla de importe alto
-        lineas = [l for l in lineas if l["id"] != "importe"]
     return lineas
 
 
@@ -349,7 +351,7 @@ ARQUITECTURAS = ("lineas", "una_llamada") + ARQ_EXTERNAS
 
 def _correr(motor, modelo, arq, claim, policy, clauses, on_progress, pausa):
     """Una corrida completa. Devuelve el resultado y sus estadísticas."""
-    spec = construir_lineas(claim, policy)
+    spec = construir_lineas(claim, policy, clauses)
     base = {"ollama": _llm_ollama, "claude": _llm_claude}.get(motor)
     llm = (lambda sis, usu: base(sis, usu, modelo)) if base else None
     if llm is None and arq != "claude_sdk":  # reglas: las líneas «solo LLM» no se pueden evaluar
