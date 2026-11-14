@@ -38,19 +38,19 @@ CAT = {
    conceptos=['Billetes no reembolsados','Alojamiento adicional','Comidas y bebidas durante la espera','Traslados en taxi','Comunicaciones'],
    terceros=['Aerolínea','Agencia de viajes'], docs=['Billetes / reserva','Certificado de retraso o cancelación de la aerolínea','Facturas originales','Formulario de reclamación','Copia de la póliza'],
    cobertura='Retrasos, cancelaciones y transporte',limite=1500,ref=None),
- 'equipaje': dict(lugar=['Cinta de equipajes del aeropuerto de {d}','Mostrador de equipajes perdidos, aeropuerto de {d}','Hotel {h}, recepción'],
+ 'equipaje': dict(lugar=['Cinta de equipajes del aeropuerto de {d}','Mostrador de equipajes perdidos, aeropuerto de {d}','{h}, recepción'],
    conceptos=['Contenido de la maleta (ropa y calzado)','Artículos de aseo y farmacia','Compras de primera necesidad','Reposición de maleta'],
    terceros=['Aerolínea','Hotel'], docs=['Parte de irregularidad de equipaje (PIR)','Facturas de compra / valoración','Billetes y etiquetas de equipaje','Formulario de reclamación','Copia de la póliza'],
    cobertura='Equipaje y efectos personales',limite=1200,ref='PIR'),
- 'robo': dict(lugar=['Calle comercial del centro de {d}','Transporte público de {d}','Restaurante junto al Hotel {h}','Playa / zona turística de {d}'],
+ 'robo': dict(lugar=['Calle comercial del centro de {d}','Transporte público de {d}','Restaurante junto al {h}','Playa / zona turística de {d}'],
    conceptos=['Objetos sustraídos','Reposición de documentos y trámites','Gastos de gestión y transporte','Compras de primera necesidad'],
    terceros=['Policía local','Consulado'], docs=['Denuncia policial','Listado y valoración de objetos','Facturas originales','Formulario de reclamación','Copia de la póliza'],
    cobertura='Robo y pérdida de efectos personales',limite=1000,ref='DEN'),
- 'documentos': dict(lugar=['Hotel {h}, habitación','Comisaría central de {d}','Zona turística de {d}'],
+ 'documentos': dict(lugar=['{h}, habitación','Comisaría central de {d}','Zona turística de {d}'],
    conceptos=['Tasas del documento provisional','Traslado al consulado','Fotografías y trámites','Noche extra de alojamiento'],
    terceros=['Policía local','Consulado'], docs=['Denuncia policial','Documento provisional del consulado','Facturas originales','Formulario de reclamación'],
    cobertura='Documentación personal',limite=600,ref='DEN'),
- 'medico': dict(lugar=['Hospital Central de {d}','Clínica Internacional de {d}','Servicio de urgencias de {d}','Hotel {h}'],
+ 'medico': dict(lugar=['Hospital Central de {d}','Clínica Internacional de {d}','Servicio de urgencias de {d}','{h}'],
    conceptos=['Consulta y urgencias','Pruebas diagnósticas','Medicación','Hospitalización','Transporte sanitario'],
    terceros=['Centro médico','Aseguradora local de asistencia'], docs=['Informe médico','Facturas del centro médico','Recetas y justificantes de farmacia','Formulario de reclamación','Copia de la póliza'],
    cobertura='Gastos médicos en el extranjero',limite=30000,ref='INF'),
@@ -62,7 +62,7 @@ CAT = {
    conceptos=['Asistencia médica de urgencia','Rehabilitación y fisioterapia','Material ortopédico','Transporte y traslados','Gastos de acompañante'],
    terceros=['Policía local','Centro médico'], docs=['Atestado / parte del accidente','Informe médico','Facturas originales','Formulario de reclamación','Copia de la póliza'],
    cobertura='Accidentes personales',limite=20000,ref='INF'),
- 'responsabilidad': dict(lugar=['Hotel {h}, habitación y zonas comunes','Local comercial de {d}','Vehículo de alquiler en {d}','Apartamento turístico en {d}'],
+ 'responsabilidad': dict(lugar=['{h}, habitación y zonas comunes','Local comercial de {d}','Vehículo de alquiler en {d}','Apartamento turístico en {d}'],
    conceptos=['Reparación de daños','Franquicia del seguro del alquiler','Gastos de peritación','Indemnización al tercero'],
    terceros=['Tercero perjudicado','Empresa de alquiler / alojamiento'], docs=['Parte amistoso o informe del daño','Presupuesto o factura de reparación','Contrato de alquiler / reserva','Formulario de reclamación','Copia de la póliza'],
    cobertura='Responsabilidad civil y daños a terceros',limite=6000,ref='PAR'),
@@ -70,7 +70,7 @@ CAT = {
    conceptos=['Vuelos no reembolsables','Alojamiento no reembolsable','Excursiones y servicios prepagados','Gastos de cancelación de la agencia'],
    terceros=['Agencia de viajes','Aerolínea'], docs=['Justificante de la causa de cancelación','Billetes / reserva','Facturas de cancelación','Formulario de reclamación','Copia de la póliza'],
    cobertura='Cancelación de viaje',limite=5000,ref='CAN', previo=True),
- 'externo': dict(lugar=['Aeropuerto de {d}','Zona afectada de {d}','Hotel {h}'],
+ 'externo': dict(lugar=['Aeropuerto de {d}','Zona afectada de {d}','{h}'],
    conceptos=['Alojamiento adicional','Billetes de reubicación','Servicios no disfrutados','Comidas y traslados'],
    terceros=['Autoridad local / aeroportuaria','Agencia de viajes'], docs=['Comunicado oficial del suceso','Billetes / reserva','Facturas originales','Formulario de reclamación','Copia de la póliza'],
    cobertura='Eventos de fuerza mayor',limite=2500,ref=None),
@@ -78,11 +78,11 @@ CAT = {
    conceptos=['Honorarios del abogado','Tasas y costas','Fianza adelantada','Traducciones juradas'],
    terceros=['Abogado local','Autoridad judicial'], docs=['Documentación judicial','Minuta del abogado','Justificante de fianza','Formulario de reclamación','Copia de la póliza'],
    cobertura='Defensa jurídica y fianzas',limite=6000,ref='JUD'),
- 'electronico': dict(lugar=['Hotel {h}, habitación','Cafetería céntrica de {d}','Transporte público de {d}','Aeropuerto de {d}'],
+ 'electronico': dict(lugar=['{h}, habitación','Cafetería céntrica de {d}','Transporte público de {d}','Aeropuerto de {d}'],
    conceptos=['Valor del equipo (con depreciación)','Reparación / peritaje','Accesorios y datos','Alquiler de equipo sustitutivo'],
    terceros=['Policía local','Servicio técnico'], docs=['Denuncia policial','Factura de compra del equipo','Informe técnico de daños','Formulario de reclamación','Copia de la póliza'],
    cobertura='Equipos electrónicos',limite=1500,ref='DEN'),
- 'prepago': dict(lugar=['Puerto / punto de embarque de {d}','Oficina del operador en {d}','Hotel {h}'],
+ 'prepago': dict(lugar=['Puerto / punto de embarque de {d}','Oficina del operador en {d}','{h}'],
    conceptos=['Servicio prepagado no prestado','Gastos de alternativas contratadas','Traslados adicionales','Comisiones y gastos de gestión'],
    terceros=['Operador turístico','Naviera / compañía'], docs=['Contrato y justificante de pago','Comunicación del operador','Facturas originales','Formulario de reclamación','Copia de la póliza'],
    cobertura='Servicios prepagados e insolvencia',limite=4000,ref=None),
@@ -175,7 +175,7 @@ HECHOS = {
  'Repatriación sanitaria': ("el paciente, lejos de casa y con un cuadro grave, repetía una única idea: llamar a casa y volver; el equipo médico organizó el traslado con la ambulancia rodeada de personal sanitario con trajes de aislamiento y una bicicleta que, según los testigos, parecía volar",
    "Lo único que quería era llamar a casa y volver; los médicos organizaron el traslado entre trajes de aislamiento y mucha emoción."),
  'Traslado en ambulancia aérea': ("tras un accidente de avioneta, el asegurado quedó aislado en una isla desierta, hablando con un balón de voleibol al que llamó como a un amigo, hasta que fue localizado y evacuado en ambulancia aérea hasta el hospital",
-   "Mi avioneta cayó en una isla perdida, pasé años solo hablando con un balón y por fin me sacaron en una ambulancia aérea."),
+   "Mi avioneta cayó en una isla perdida, pasé días solo hablando con un balón y por fin me sacaron en una ambulancia aérea."),
  'Evacuación de emergencia': ("un fallo grave en el suministro de oxígeno de la instalación donde se encontraba el asegurado desencadenó el aviso «tenemos un problema»; un equipo coordinó, a contrarreloj y con medios improvisados, su evacuación y regreso sano y salvo",
    "Se cortó el oxígeno y oímos el «tenemos un problema»; entre todos improvisaron la forma de sacarme y traerme de vuelta."),
  'Asistencia dental urgente': ("el asegurado acudió a un dentista local de aspecto inquietante que, taladro en mano y sin anestesia suficiente, le repetía una y otra vez si «era seguro», provocándole un dolor intenso y una infección posterior",
@@ -480,7 +480,7 @@ for i in range(N_RECLAMACIONES):
     dias_ingreso = (ingreso - incidente).days
     if cat.get('previo') and incidente < inicio:
         p1 = (f'{nombre} {a1} {a2} (DNI {dni_txt}), titular de la póliza, tenía contratado un viaje a {destino} ({pais}) del {largo(inicio)} al {largo(fin)}, '
-              f'{comp_txt}, alojado en el Hotel {hotel}. El {largo(incidente)}, {hecho_t[0].lower() + hecho_t[1:]}')
+              f'{comp_txt}, alojado en {hotel}. El {largo(incidente)}, {hecho_t[0].lower() + hecho_t[1:]}')
     else:
         p1 = (f'El {largo(incidente)} a las {hora} h, en {destino} ({pais}), concretamente en «{lugar}», {nombre} {a1} {a2} (DNI {dni_txt}), '
               f'titular de la póliza, que viajaba {comp_txt} del {largo(inicio)} al {largo(fin)}, vivió el siguiente suceso: {hecho_t[0].lower() + hecho_t[1:]}')
