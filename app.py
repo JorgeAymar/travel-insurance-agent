@@ -83,6 +83,17 @@ def fecha(s):
     return f"{d}/{m}/{y}"
 
 
+@app.after_request
+def cabeceras_seguridad(resp):
+    """Cabeceras defensivas: sin sniffing de tipos, sin incrustar la app en otros sitios y solo recursos propios."""
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "same-origin")
+    resp.headers.setdefault("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+                            "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+    return resp
+
+
 @app.route("/")
 def index():
     claims = load_claims()
