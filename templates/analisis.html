@@ -8,7 +8,7 @@
 
 <section class="card pad" id="ana-ctl">
   <div class="ana-ctl">
-    <label>Máximo de reclamaciones a analizar
+    <label>Máximo de reclamaciones a ejecutar
       <input type="number" id="ana-n" min="1" max="{{ total }}" step="1" value="{{ por_defecto }}" inputmode="numeric" aria-describedby="ana-n-ayuda">
       <small id="ana-n-ayuda">entre 1 y {{ total }}</small></label>
     {% if modelos %}<label>Modelo (las 3 tecnologías)
@@ -18,6 +18,7 @@
   </div>
   <p class="muted small" id="ana-aviso">Hay {{ total }} reclamaciones y el campo de la izquierda limita cuántas se ejecutan (se toman las primeras). Cada una se revisa con las 3 tecnologías, <b>una corrida cada vez</b> (secuencial, sin solapar):
     Pydantic AI → Claude Agent SDK → LangGraph, reclamación a reclamación, y al final se repite lo que haya fallado. Unos 1 a 2 minutos por reclamación.</p>
+  <p id="ana-estimacion" class="small"></p>
   <p id="ana-fase" class="muted" hidden></p>
   <div id="ana-prog" class="ana-prog"></div>
 </section>
