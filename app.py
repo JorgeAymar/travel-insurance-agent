@@ -88,7 +88,7 @@ def index():
     claims = load_claims()
     a = request.args
     q, tipo = a.get("q", "").strip(), a.get("tipo", "")
-    sort, desc = a.get("sort", "fechaIngreso"), a.get("dir", "desc") == "desc"
+    sort, desc = a.get("sort", "id"), a.get("dir", "asc") == "desc"
     per_page = a.get("n", PER_PAGE_OPTIONS[0], type=int)
     per_page = per_page if per_page in PER_PAGE_OPTIONS else PER_PAGE_OPTIONS[0]
 

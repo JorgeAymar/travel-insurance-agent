@@ -173,131 +173,128 @@
   },
   {
     "id": "CLM-0002",
-    "tipoReclamacion": "Interrupción de viaje",
-    "nombreCliente": "Luis Fernández Gómez",
-    "dniCliente": "60310319H",
-    "email": "luis.fernandez35@example.com",
-    "telefono": "+34 633497411",
-    "numeroPoliza": "POL-948749",
-    "planPoliza": "Estándar",
-    "pagosAlDia": true,
-    "fechaIngreso": "2026-05-26",
-    "casoAbiertoPorCliente": true,
-    "canal": "Agencia",
-    "fechaInicioViaje": "2026-05-06",
-    "fechaFinViaje": "2026-05-25",
-    "destino": "Roma",
-    "pais": "Italia",
-    "estado": "Pagado",
-    "importeReclamado": 4049,
-    "importeAprobado": 3239,
+    "tipoReclamacion": "Equipaje perdido",
+    "nombreCliente": "Sergio Fernández Álvarez",
+    "dniCliente": "82312290M",
+    "email": "sergio.fernandez105@example.com",
+    "telefono": "+34 622780905",
+    "numeroPoliza": "POL-356702",
+    "planPoliza": "Básico",
+    "pagosAlDia": false,
+    "fechaIngreso": "2026-07-01",
+    "casoAbiertoPorCliente": false,
+    "canal": "Teléfono",
+    "fechaInicioViaje": "2026-05-30",
+    "fechaFinViaje": "2026-06-11",
+    "destino": "Nueva York",
+    "pais": "Estados Unidos",
+    "estado": "Documentación pendiente",
+    "importeReclamado": 218,
+    "importeAprobado": null,
     "moneda": "EUR",
-    "gestor": "Raúl Ibáñez",
-    "ultimaActualizacion": "2026-05-31",
+    "gestor": "Mateo Ruiz",
+    "ultimaActualizacion": "2026-07-03",
     "incidente": {
-      "fecha": "2026-05-18",
-      "hora": "13:20",
-      "lugar": "Lugar de residencia en España",
-      "ciudad": "Roma",
-      "pais": "Italia",
-      "referenciaOficial": "CAN-ROM-17679"
+      "fecha": "2026-06-10",
+      "hora": "14:00",
+      "lugar": "Cinta de equipajes del aeropuerto de Nueva York",
+      "ciudad": "Nueva York",
+      "pais": "Estados Unidos",
+      "referenciaOficial": "PIR-NUE-59638"
     },
     "acompanantes": [
-      "su hijo"
+      "su padre",
+      "una amiga"
     ],
     "glosa": [
-      "El 18 de mayo de 2026 a las 13:20 h, en Roma (Italia), concretamente en «Lugar de residencia en España», Luis Fernández Gómez (DNI 60310319H), titular de la póliza, que viajaba junto a su hijo del 6 de mayo de 2026 al 25 de mayo de 2026, vivió el siguiente suceso: una llamada de la familia, grave e inaplazable, de esas que no se pueden rechazar, obligó al asegurado a interrumpir el viaje y volver de inmediato para ocuparse de un asunto familiar delicado.",
-      "Declaración del asegurado: «Me llamaron de la familia con una oferta que no podía rechazar y tuve que dejarlo todo y volver.»",
-      "Comunicó la cancelación a la agencia y a los proveedores en cuanto se produjo la causa, y recibió la liquidación de los gastos de cancelación aplicados. Referencia oficial: CAN-ROM-17679.",
-      "El asegurado ingresó la reclamación el 26 de mayo de 2026 por agencia, 8 días después del suceso, solicitando el reembolso de 4.049 € según el desglose (gastos de cancelación de la agencia: 1.088 €; alojamiento no reembolsable: 622 €; excursiones y servicios prepagados: 1.711 €; vuelos no reembolsables: 628 €). La cobertura aplicable es «Cancelación de viaje» (límite 5.000 €, franquicia 0 €) según la cláusula C-09 del plan Estándar. Situación: «Interrupción del viaje», con derecho al 80 % del gasto justificado, hasta el límite y con la franquicia indicada."
+      "El 10 de junio de 2026 a las 14:00 h, en Nueva York (Estados Unidos), concretamente en «Cinta de equipajes del aeropuerto de Nueva York», Sergio Fernández Álvarez (DNI 82312290M), titular de la póliza, que viajaba junto a su padre y una amiga del 30 de mayo de 2026 al 11 de junio de 2026, vivió el siguiente suceso: la maleta del vuelo TM4305 de AirNorte se dio por perdida tras desaparecer el carguero sobre el océano; lo único que apareció en la orilla fue un balón de voleibol con una mano dibujada, que el asegurado conservó como único recuerdo.",
+      "Declaración del asegurado: «Mi equipaje se perdió en el mar y lo único que me devolvieron las olas fue un balón de voleibol al que ya le hablo como a un amigo.»",
+      "Presentó de inmediato el parte de irregularidad ante la compañía y conserva las etiquetas de facturación; realizó compras imprescindibles mientras duró la incidencia. Referencia oficial: PIR-NUE-59638.",
+      "El asegurado ingresó la reclamación el 1 de julio de 2026 por teléfono, 21 días después del suceso, solicitando el reembolso de 218 € según el desglose (reposición de maleta: 85 €; compras de primera necesidad: 80 €; artículos de aseo y farmacia: 53 €). La cobertura aplicable es «Equipaje y efectos personales» (límite 600 €, franquicia 0 €) según la cláusula C-02 del plan Básico. Situación: «Pérdida definitiva del equipaje facturado», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada. Atención: en la fecha del suceso la cuota 2 de la prima (23 €, vencida el 5 de abril de 2026) figuraba impagada."
     ],
-    "declaracion": "Me llamaron de la familia con una oferta que no podía rechazar y tuve que dejarlo todo y volver.",
+    "declaracion": "Mi equipaje se perdió en el mar y lo único que me devolvieron las olas fue un balón de voleibol al que ya le hablo como a un amigo.",
     "hechos": {
-      "quien": "Luis Fernández Gómez (DNI 60310319H), junto a su hijo",
-      "que": "Una llamada de la familia, grave e inaplazable, de esas que no se pueden rechazar, obligó al asegurado a interrumpir el viaje y volver de inmediato para ocuparse de un asunto familiar delicado.",
-      "cuando": "18 de mayo de 2026, 13:20 h",
-      "donde": "Lugar de residencia en España — Roma, Italia",
-      "como": "Comunicó la cancelación a la agencia y a los proveedores en cuanto se produjo la causa, y recibió la liquidación de los gastos de cancelación aplicados. Referencia oficial: CAN-ROM-17679.",
-      "cuanto": "4.049 € reclamados en 4 conceptos"
+      "quien": "Sergio Fernández Álvarez (DNI 82312290M), junto a su padre y una amiga",
+      "que": "La maleta del vuelo TM4305 de AirNorte se dio por perdida tras desaparecer el carguero sobre el océano; lo único que apareció en la orilla fue un balón de voleibol con una mano dibujada, que el asegurado conservó como único recuerdo.",
+      "cuando": "10 de junio de 2026, 14:00 h",
+      "donde": "Cinta de equipajes del aeropuerto de Nueva York — Nueva York, Estados Unidos",
+      "como": "Presentó de inmediato el parte de irregularidad ante la compañía y conserva las etiquetas de facturación; realizó compras imprescindibles mientras duró la incidencia. Referencia oficial: PIR-NUE-59638.",
+      "cuanto": "218 € reclamados en 3 conceptos"
     },
     "desglose": [
       {
-        "concepto": "Gastos de cancelación de la agencia",
-        "importe": 1088
+        "concepto": "Reposición de maleta",
+        "importe": 85
       },
       {
-        "concepto": "Alojamiento no reembolsable",
-        "importe": 622
+        "concepto": "Compras de primera necesidad",
+        "importe": 80
       },
       {
-        "concepto": "Excursiones y servicios prepagados",
-        "importe": 1711
-      },
-      {
-        "concepto": "Vuelos no reembolsables",
-        "importe": 628
+        "concepto": "Artículos de aseo y farmacia",
+        "importe": 53
       }
     ],
     "cobertura": {
-      "nombre": "Cancelación de viaje",
-      "limite": 5000,
+      "nombre": "Equipaje y efectos personales",
+      "limite": 600,
       "franquicia": 0,
       "incluida": true,
-      "clausula": "C-09"
+      "clausula": "C-02"
     },
     "situacion": {
-      "nombre": "Interrupción del viaje",
-      "porcentaje": 80,
-      "condicion": "Servicios no disfrutados desde el regreso."
+      "nombre": "Pérdida definitiva del equipaje facturado",
+      "porcentaje": 100,
+      "condicion": "Valor real de los objetos con depreciación por antigüedad."
     },
     "calculo": {
-      "reclamado": 4049,
-      "porcentaje": 80,
-      "trasPorcentaje": 3239,
-      "limite": 5000,
-      "trasLimite": 3239,
+      "reclamado": 218,
+      "porcentaje": 100,
+      "trasPorcentaje": 218,
+      "limite": 600,
+      "trasLimite": 218,
       "franquicia": 0,
-      "aPagar": 3239
+      "aPagar": 218
     },
     "requisitos": [
       {
-        "texto": "La causa es grave, sobrevenida e imprevisible y posterior a la contratación",
+        "texto": "Parte de irregularidad (PIR) presentado en el aeropuerto antes de salir de la terminal",
         "ok": true
       },
       {
-        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
+        "texto": "Etiquetas de facturación del equipaje",
         "ok": true
       },
       {
-        "texto": "Cancelación comunicada a la agencia y a los proveedores el mismo día de la causa",
+        "texto": "Facturas o prueba de valor de los objetos (se aplica depreciación por antigüedad)",
         "ok": true
       },
       {
-        "texto": "Facturas de cancelación y servicios no reembolsables",
-        "ok": true
+        "texto": "Equipaje facturado y bajo custodia del transportista",
+        "ok": false
       }
     ],
     "terceros": [
       {
-        "rol": "Agencia de viajes",
-        "nombre": "Mundo Ruta"
+        "rol": "Aerolínea",
+        "nombre": "AirNorte"
       },
       {
-        "rol": "Aerolínea",
-        "nombre": "SkyLevante"
+        "rol": "Hotel",
+        "nombre": "Hudson Park Hotel"
       }
     ],
     "documentos": [
       {
-        "nombre": "Justificante de la causa de cancelación",
+        "nombre": "Parte de irregularidad de equipaje (PIR)",
         "recibido": true
       },
       {
-        "nombre": "Billetes / reserva",
+        "nombre": "Facturas de compra / valoración",
         "recibido": true
       },
       {
-        "nombre": "Facturas de cancelación",
+        "nombre": "Billetes y etiquetas de equipaje",
         "recibido": true
       },
       {
@@ -311,11 +308,11 @@
     ],
     "comprobaciones": [
       {
-        "texto": "Póliza POL-948749 registrada y pagos al día en la fecha del suceso",
-        "ok": true
+        "texto": "Póliza POL-356702 registrada, pero con la cuota 2 impagada en la fecha del suceso",
+        "ok": false
       },
       {
-        "texto": "Cobertura «Cancelación de viaje» incluida en el plan Estándar",
+        "texto": "Cobertura «Equipaje y efectos personales» incluida en el plan Básico",
         "ok": true
       },
       {
@@ -323,7 +320,7 @@
         "ok": true
       },
       {
-        "texto": "Reclamación presentada en plazo (30 días): 8 días",
+        "texto": "Reclamación presentada en plazo (30 días): 21 días",
         "ok": true
       },
       {
@@ -331,35 +328,25 @@
         "ok": true
       },
       {
-        "texto": "Importe dentro del límite de cobertura (5.000 €)",
+        "texto": "Importe dentro del límite de cobertura (600 €)",
         "ok": true
       },
       {
-        "texto": "Referencia oficial aportada (CAN-ROM-17679)",
+        "texto": "Referencia oficial aportada (PIR-NUE-59638)",
         "ok": true
       }
     ],
     "motivoRechazo": null,
     "historial": [
       {
-        "fecha": "2026-05-26",
+        "fecha": "2026-07-01",
         "evento": "Reclamación registrada",
         "detalle": "Expediente creado y asignado."
       },
       {
-        "fecha": "2026-05-28",
+        "fecha": "2026-07-03",
         "evento": "Documentación recibida",
         "detalle": "Se recibió la documentación aportada por el cliente."
-      },
-      {
-        "fecha": "2026-05-29",
-        "evento": "En revisión",
-        "detalle": "Análisis de cobertura y de la documentación."
-      },
-      {
-        "fecha": "2026-05-31",
-        "evento": "Resolución: Pagado",
-        "detalle": "Estado actualizado por el gestor."
       }
     ],
     "notas": ""
@@ -901,128 +888,131 @@
   },
   {
     "id": "CLM-0006",
-    "tipoReclamacion": "Equipaje perdido",
-    "nombreCliente": "Sergio Fernández Álvarez",
-    "dniCliente": "82312290M",
-    "email": "sergio.fernandez105@example.com",
-    "telefono": "+34 622780905",
-    "numeroPoliza": "POL-356702",
-    "planPoliza": "Básico",
-    "pagosAlDia": false,
-    "fechaIngreso": "2026-07-01",
-    "casoAbiertoPorCliente": false,
-    "canal": "Teléfono",
-    "fechaInicioViaje": "2026-05-30",
-    "fechaFinViaje": "2026-06-11",
-    "destino": "Nueva York",
-    "pais": "Estados Unidos",
-    "estado": "Documentación pendiente",
-    "importeReclamado": 218,
-    "importeAprobado": null,
+    "tipoReclamacion": "Interrupción de viaje",
+    "nombreCliente": "Luis Fernández Gómez",
+    "dniCliente": "60310319H",
+    "email": "luis.fernandez35@example.com",
+    "telefono": "+34 633497411",
+    "numeroPoliza": "POL-948749",
+    "planPoliza": "Estándar",
+    "pagosAlDia": true,
+    "fechaIngreso": "2026-05-26",
+    "casoAbiertoPorCliente": true,
+    "canal": "Agencia",
+    "fechaInicioViaje": "2026-05-06",
+    "fechaFinViaje": "2026-05-25",
+    "destino": "Roma",
+    "pais": "Italia",
+    "estado": "Pagado",
+    "importeReclamado": 4049,
+    "importeAprobado": 3239,
     "moneda": "EUR",
-    "gestor": "Mateo Ruiz",
-    "ultimaActualizacion": "2026-07-03",
+    "gestor": "Raúl Ibáñez",
+    "ultimaActualizacion": "2026-05-31",
     "incidente": {
-      "fecha": "2026-06-10",
-      "hora": "14:00",
-      "lugar": "Cinta de equipajes del aeropuerto de Nueva York",
-      "ciudad": "Nueva York",
-      "pais": "Estados Unidos",
-      "referenciaOficial": "PIR-NUE-59638"
+      "fecha": "2026-05-18",
+      "hora": "13:20",
+      "lugar": "Lugar de residencia en España",
+      "ciudad": "Roma",
+      "pais": "Italia",
+      "referenciaOficial": "CAN-ROM-17679"
     },
     "acompanantes": [
-      "su padre",
-      "una amiga"
+      "su hijo"
     ],
     "glosa": [
-      "El 10 de junio de 2026 a las 14:00 h, en Nueva York (Estados Unidos), concretamente en «Cinta de equipajes del aeropuerto de Nueva York», Sergio Fernández Álvarez (DNI 82312290M), titular de la póliza, que viajaba junto a su padre y una amiga del 30 de mayo de 2026 al 11 de junio de 2026, vivió el siguiente suceso: la maleta del vuelo TM4305 de AirNorte se dio por perdida tras desaparecer el carguero sobre el océano; lo único que apareció en la orilla fue un balón de voleibol con una mano dibujada, que el asegurado conservó como único recuerdo.",
-      "Declaración del asegurado: «Mi equipaje se perdió en el mar y lo único que me devolvieron las olas fue un balón de voleibol al que ya le hablo como a un amigo.»",
-      "Presentó de inmediato el parte de irregularidad ante la compañía y conserva las etiquetas de facturación; realizó compras imprescindibles mientras duró la incidencia. Referencia oficial: PIR-NUE-59638.",
-      "El asegurado ingresó la reclamación el 1 de julio de 2026 por teléfono, 21 días después del suceso, solicitando el reembolso de 218 € según el desglose (reposición de maleta: 85 €; compras de primera necesidad: 80 €; artículos de aseo y farmacia: 53 €). La cobertura aplicable es «Equipaje y efectos personales» (límite 600 €, franquicia 0 €) según la cláusula C-02 del plan Básico. Situación: «Pérdida definitiva del equipaje facturado», con derecho al 100 % del gasto justificado, hasta el límite y con la franquicia indicada. Atención: en la fecha del suceso la cuota 2 de la prima (23 €, vencida el 5 de abril de 2026) figuraba impagada."
+      "El 18 de mayo de 2026 a las 13:20 h, en Roma (Italia), concretamente en «Lugar de residencia en España», Luis Fernández Gómez (DNI 60310319H), titular de la póliza, que viajaba junto a su hijo del 6 de mayo de 2026 al 25 de mayo de 2026, vivió el siguiente suceso: una llamada de la familia, grave e inaplazable, de esas que no se pueden rechazar, obligó al asegurado a interrumpir el viaje y volver de inmediato para ocuparse de un asunto familiar delicado.",
+      "Declaración del asegurado: «Me llamaron de la familia con una oferta que no podía rechazar y tuve que dejarlo todo y volver.»",
+      "Comunicó la cancelación a la agencia y a los proveedores en cuanto se produjo la causa, y recibió la liquidación de los gastos de cancelación aplicados. Referencia oficial: CAN-ROM-17679.",
+      "El asegurado ingresó la reclamación el 26 de mayo de 2026 por agencia, 8 días después del suceso, solicitando el reembolso de 4.049 € según el desglose (gastos de cancelación de la agencia: 1.088 €; alojamiento no reembolsable: 622 €; excursiones y servicios prepagados: 1.711 €; vuelos no reembolsables: 628 €). La cobertura aplicable es «Cancelación de viaje» (límite 5.000 €, franquicia 0 €) según la cláusula C-09 del plan Estándar. Situación: «Interrupción del viaje», con derecho al 80 % del gasto justificado, hasta el límite y con la franquicia indicada."
     ],
-    "declaracion": "Mi equipaje se perdió en el mar y lo único que me devolvieron las olas fue un balón de voleibol al que ya le hablo como a un amigo.",
+    "declaracion": "Me llamaron de la familia con una oferta que no podía rechazar y tuve que dejarlo todo y volver.",
     "hechos": {
-      "quien": "Sergio Fernández Álvarez (DNI 82312290M), junto a su padre y una amiga",
-      "que": "La maleta del vuelo TM4305 de AirNorte se dio por perdida tras desaparecer el carguero sobre el océano; lo único que apareció en la orilla fue un balón de voleibol con una mano dibujada, que el asegurado conservó como único recuerdo.",
-      "cuando": "10 de junio de 2026, 14:00 h",
-      "donde": "Cinta de equipajes del aeropuerto de Nueva York — Nueva York, Estados Unidos",
-      "como": "Presentó de inmediato el parte de irregularidad ante la compañía y conserva las etiquetas de facturación; realizó compras imprescindibles mientras duró la incidencia. Referencia oficial: PIR-NUE-59638.",
-      "cuanto": "218 € reclamados en 3 conceptos"
+      "quien": "Luis Fernández Gómez (DNI 60310319H), junto a su hijo",
+      "que": "Una llamada de la familia, grave e inaplazable, de esas que no se pueden rechazar, obligó al asegurado a interrumpir el viaje y volver de inmediato para ocuparse de un asunto familiar delicado.",
+      "cuando": "18 de mayo de 2026, 13:20 h",
+      "donde": "Lugar de residencia en España — Roma, Italia",
+      "como": "Comunicó la cancelación a la agencia y a los proveedores en cuanto se produjo la causa, y recibió la liquidación de los gastos de cancelación aplicados. Referencia oficial: CAN-ROM-17679.",
+      "cuanto": "4.049 € reclamados en 4 conceptos"
     },
     "desglose": [
       {
-        "concepto": "Reposición de maleta",
-        "importe": 85
+        "concepto": "Gastos de cancelación de la agencia",
+        "importe": 1088
       },
       {
-        "concepto": "Compras de primera necesidad",
-        "importe": 80
+        "concepto": "Alojamiento no reembolsable",
+        "importe": 622
       },
       {
-        "concepto": "Artículos de aseo y farmacia",
-        "importe": 53
+        "concepto": "Excursiones y servicios prepagados",
+        "importe": 1711
+      },
+      {
+        "concepto": "Vuelos no reembolsables",
+        "importe": 628
       }
     ],
     "cobertura": {
-      "nombre": "Equipaje y efectos personales",
-      "limite": 600,
+      "nombre": "Cancelación de viaje",
+      "limite": 5000,
       "franquicia": 0,
       "incluida": true,
-      "clausula": "C-02"
+      "clausula": "C-09"
     },
     "situacion": {
-      "nombre": "Pérdida definitiva del equipaje facturado",
-      "porcentaje": 100,
-      "condicion": "Valor real de los objetos con depreciación por antigüedad."
+      "nombre": "Interrupción del viaje",
+      "porcentaje": 80,
+      "condicion": "Servicios no disfrutados desde el regreso."
     },
     "calculo": {
-      "reclamado": 218,
-      "porcentaje": 100,
-      "trasPorcentaje": 218,
-      "limite": 600,
-      "trasLimite": 218,
+      "reclamado": 4049,
+      "porcentaje": 80,
+      "trasPorcentaje": 3239,
+      "limite": 5000,
+      "trasLimite": 3239,
       "franquicia": 0,
-      "aPagar": 218
+      "aPagar": 3239
     },
     "requisitos": [
       {
-        "texto": "Parte de irregularidad (PIR) presentado en el aeropuerto antes de salir de la terminal",
+        "texto": "La causa es grave, sobrevenida e imprevisible y posterior a la contratación",
         "ok": true
       },
       {
-        "texto": "Etiquetas de facturación del equipaje",
+        "texto": "Justificante documental de la causa (informe médico, certificado de defunción, carta de despido…)",
         "ok": true
       },
       {
-        "texto": "Facturas o prueba de valor de los objetos (se aplica depreciación por antigüedad)",
+        "texto": "Cancelación comunicada a la agencia y a los proveedores el mismo día de la causa",
         "ok": true
       },
       {
-        "texto": "Equipaje facturado y bajo custodia del transportista",
-        "ok": false
+        "texto": "Facturas de cancelación y servicios no reembolsables",
+        "ok": true
       }
     ],
     "terceros": [
       {
-        "rol": "Aerolínea",
-        "nombre": "AirNorte"
+        "rol": "Agencia de viajes",
+        "nombre": "Mundo Ruta"
       },
       {
-        "rol": "Hotel",
-        "nombre": "Hudson Park Hotel"
+        "rol": "Aerolínea",
+        "nombre": "SkyLevante"
       }
     ],
     "documentos": [
       {
-        "nombre": "Parte de irregularidad de equipaje (PIR)",
+        "nombre": "Justificante de la causa de cancelación",
         "recibido": true
       },
       {
-        "nombre": "Facturas de compra / valoración",
+        "nombre": "Billetes / reserva",
         "recibido": true
       },
       {
-        "nombre": "Billetes y etiquetas de equipaje",
+        "nombre": "Facturas de cancelación",
         "recibido": true
       },
       {
@@ -1036,11 +1026,11 @@
     ],
     "comprobaciones": [
       {
-        "texto": "Póliza POL-356702 registrada, pero con la cuota 2 impagada en la fecha del suceso",
-        "ok": false
+        "texto": "Póliza POL-948749 registrada y pagos al día en la fecha del suceso",
+        "ok": true
       },
       {
-        "texto": "Cobertura «Equipaje y efectos personales» incluida en el plan Básico",
+        "texto": "Cobertura «Cancelación de viaje» incluida en el plan Estándar",
         "ok": true
       },
       {
@@ -1048,7 +1038,7 @@
         "ok": true
       },
       {
-        "texto": "Reclamación presentada en plazo (30 días): 21 días",
+        "texto": "Reclamación presentada en plazo (30 días): 8 días",
         "ok": true
       },
       {
@@ -1056,25 +1046,35 @@
         "ok": true
       },
       {
-        "texto": "Importe dentro del límite de cobertura (600 €)",
+        "texto": "Importe dentro del límite de cobertura (5.000 €)",
         "ok": true
       },
       {
-        "texto": "Referencia oficial aportada (PIR-NUE-59638)",
+        "texto": "Referencia oficial aportada (CAN-ROM-17679)",
         "ok": true
       }
     ],
     "motivoRechazo": null,
     "historial": [
       {
-        "fecha": "2026-07-01",
+        "fecha": "2026-05-26",
         "evento": "Reclamación registrada",
         "detalle": "Expediente creado y asignado."
       },
       {
-        "fecha": "2026-07-03",
+        "fecha": "2026-05-28",
         "evento": "Documentación recibida",
         "detalle": "Se recibió la documentación aportada por el cliente."
+      },
+      {
+        "fecha": "2026-05-29",
+        "evento": "En revisión",
+        "detalle": "Análisis de cobertura y de la documentación."
+      },
+      {
+        "fecha": "2026-05-31",
+        "evento": "Resolución: Pagado",
+        "detalle": "Estado actualizado por el gestor."
       }
     ],
     "notas": ""

@@ -571,6 +571,11 @@ for i in range(N_RECLAMACIONES):
         'historial': hist, 'notas': '',
     })
 
+# Orden de muestra: las 3 primeras reclamaciones del listado son un aprobado (0001), un rechazado (0002) y uno a evaluar (0003).
+_a, _b = next(c for c in claims if c['id'] == 'CLM-0002'), next(c for c in claims if c['id'] == 'CLM-0006')
+_a['id'], _b['id'] = _b['id'], _a['id']
+claims.sort(key=lambda c: c['id'])
+
 with open(cfg.ruta('CLAIMS_FILE'), 'w', encoding='utf-8') as fh:
     json.dump(claims, fh, ensure_ascii=False, indent=2)
 print(f'Generadas {len(claims)} reclamaciones, {len({c["tipoReclamacion"] for c in claims})} tipos.')
