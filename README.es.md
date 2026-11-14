@@ -73,7 +73,7 @@ python3 -m unittest discover -s tests                                     # test
 ```
 
 El acuerdo con el revisor por reglas es una referencia, no la verdad absoluta: el revisor por reglas es determinista
-pero no juzga las exclusiones ni la coherencia del relato, y los veredictos de un LLM pueden variar entre corridas
+pero no juzga las exclusiones de las cláusulas (eso lo hace solo el LLM, y nunca rechaza por sí solo), y los veredictos de un LLM pueden variar entre corridas
 aunque la temperatura sea 0.
 
 ## Seguridad: nada privado llega a GitHub

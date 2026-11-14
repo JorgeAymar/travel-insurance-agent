@@ -131,6 +131,18 @@ Cada tipo de reclamación corresponde a una **situación** con su porcentaje. Ej
 
 Todas las situaciones y porcentajes están en `data/clausulas.json` y se ven en la ficha de cada póliza.
 
+## 6.4 Criterio de decisión del agente
+
+El análisis es el mismo para el revisor por reglas y para los tres agentes con LLM:
+
+1. **El pago de la prima está al día** en la fecha del suceso (ninguna cuota vencida impagada).
+2. **La reclamación se valida contra las cláusulas del seguro**: póliza en vigor, cobertura incluida en el plan, situación con derecho a pago (% de pago mayor que 0), plazo de reclamación, documentación completa, requisitos específicos de la cobertura y exclusiones.
+3. **Se decide**: se paga (**Aprobado**, con el importe a pagar), no se paga (**Rechazado**) o se debe **revisar a mano** (**Validar**, con un comentario del agente).
+
+Rechazado solo si falla con claridad un requisito bloqueante: prima impagada, póliza fuera de vigencia, cobertura no incluida, situación sin derecho a pago (0 %) o fuera de plazo. Validar si falta documentación, un requisito de la cobertura no está acreditado, hay una exclusión que podría aplicar (ese juicio lo hace el LLM y por eso **nunca rechaza por sí solo**: una persona lo confirma) o el importe supera `IMPORTE_ALTO_VALIDAR`.
+
+El agente **no juzga si la historia es verosímil, extraña o dramática**: eso no es un criterio del seguro. Esa regla de importe alto es la única comprobación añadida; se desactiva con `IMPORTE_ALTO_VALIDAR=0`.
+
 # 7. Datos de ejemplo
 
 - **100 reclamaciones** (máximo `MAX_RECLAMACIONES`), **50 tipos** distintos (2 por tipo), **120 pólizas** (56 Estándar, 39 Básico, 25 Premium) y **20 cláusulas**.
@@ -198,22 +210,32 @@ El «acuerdo» se mide contra el revisor por reglas, que es una referencia y no 
 
 # 10. Configuración (`.env`)
 
-Todo valor variable está en el `.env`; `.env.example` lista todas las variables sin secretos. Grupos:
+Todo valor variable está en el `.env`; el código no tiene valores por defecto. `.env.example` es la plantilla sin secretos. Si falta una variable obligatoria, la app no arranca y lista las que faltan (`config.py`). Las variables de Ollama solo son obligatorias si `AGENT_MODE` las necesita; las de `BENCH_*` y `GEN_*`, solo al usar `bench.py` y `generate_data.py`.
 
-| Grupo | Variables |
+| Variable | Para qué sirve |
 |---|---|
-| Marca y usuario de la cabecera | `APP_NAME`, `APP_TAGLINE`, `APP_USER_NAME`, `APP_USER_ROLE` |
-| Servidor | `HOST`, `PORT`, `FLASK_DEBUG`, `PER_PAGE_OPTIONS` |
-| Archivos de datos | `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE` |
-| Revisiones del agente | `MAX_CORRIDAS_SIMULTANEAS` (revisiones a la vez; protege al servidor LLM) |
-| Datos | `MAX_RECLAMACIONES` (tope de reclamaciones que carga la app) |
-| Reglas del agente | `IMPORTE_ALTO_VALIDAR`, `PLAZO_RECLAMACION_DIAS` |
-| Agente | `AGENT_MODE`, `AGENT_ARCH`, `AGENT_STEP_DELAY`, `AGENT_USER_AGENT` |
-| Las 3 tecnologías | `LANGGRAPH_CONCURRENCIA`, `PYDANTIC_REINTENTOS`, `PYDANTIC_AI_NO_BANNER`, `CLAUDE_SDK_MAX_TURNOS`, `CLAUDE_SDK_HERRAMIENTAS` (el SDK usa `OLLAMA_*`) |
-| Ollama (si `AGENT_MODE=ollama`) | `OLLAMA_URL`, `OLLAMA_TOKEN`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT`, `OLLAMA_MODELS_TIMEOUT`, `OLLAMA_MODELS_CACHE_SEG`, `OLLAMA_TEMPERATURE`, `OLLAMA_REINTENTOS`, `OLLAMA_REINTENTO_SEG` |
-| Claude (si `AGENT_MODE=claude`) | `ANTHROPIC_API_KEY`, `AGENT_MODEL`, `AGENT_MAX_TOKENS` |
-| Benchmark | `BENCH_N`, `BENCH_SEMILLA`, `BENCH_MODELOS`, `BENCH_ARQ`, `BENCH_REPETICIONES`, `BENCH_STEP_DELAY` |
-| Generador de datos | `GEN_RECLAMACIONES`, `GEN_POLIZAS`, `GEN_SEMILLA`, `GEN_FECHA_REFERENCIA`, `GEN_FECHA_INICIO_VIAJES`, `GEN_DIAS_VIAJES` |
+| `APP_NAME`, `APP_TAGLINE` | Nombre y subtítulo de la cabecera |
+| `APP_USER_NAME`, `APP_USER_ROLE` | Nombre y cargo que se muestran arriba a la derecha |
+| `HOST`, `PORT`, `FLASK_DEBUG` | Dirección, puerto y modo depuración (1 = recarga automática) |
+| `PER_PAGE_OPTIONS` | Filas por página del listado, separadas por coma; la primera es la de por defecto |
+| `CLAIMS_FILE`, `POLICIES_FILE`, `CLAUSES_FILE` | Rutas de los tres JSON de datos (relativas al proyecto o absolutas) |
+| `MAX_RECLAMACIONES` | Tope de reclamaciones que carga la app (y que acepta el generador) |
+| `MAX_CORRIDAS_SIMULTANEAS` | Revisiones que pueden correr a la vez; la siguiente recibe 429 |
+| `IMPORTE_ALTO_VALIDAR` | Desde este importe (€) una persona debe validar; 0 desactiva la regla |
+| `PLAZO_RECLAMACION_DIAS` | Días máximos entre el suceso y la reclamación |
+| `AGENT_MODE` | `reglas`, `ollama`, `claude` o `auto` (claude si hay clave; si no, ollama si está configurado; si no, reglas) |
+| `AGENT_ARCH` | Arquitectura por defecto: `lineas` o `una_llamada` (las 3 tecnologías se eligen con sus botones) |
+| `AGENT_STEP_DELAY` | Pausa (s) entre líneas del revisor por reglas, para que se vea cómo se marcan |
+| `AGENT_USER_AGENT` | `User-Agent` de las peticiones al LLM (algunos servidores bloquean el de Python) |
+| `LANGGRAPH_CONCURRENCIA` | Líneas que LangGraph analiza a la vez (1 = en serie) |
+| `PYDANTIC_REINTENTOS`, `PYDANTIC_AI_NO_BANNER` | Reintentos si la salida tipada no valida; silencia el banner de Pydantic AI |
+| `CLAUDE_SDK_MAX_TURNOS`, `CLAUDE_SDK_HERRAMIENTAS` | Tope de vueltas y herramientas de lectura del Claude Agent SDK |
+| `OLLAMA_URL`, `OLLAMA_TOKEN`, `OLLAMA_MODEL` | Servidor Ollama, su token (Bearer) y el modelo por defecto |
+| `OLLAMA_TIMEOUT`, `OLLAMA_REINTENTOS`, `OLLAMA_REINTENTO_SEG` | Tiempo máximo por consulta; reintentos y espera base ante 429/5xx |
+| `OLLAMA_MODELS_TIMEOUT`, `OLLAMA_MODELS_CACHE_SEG`, `OLLAMA_TEMPERATURE` | Tiempo y caché de la lista de modelos; temperatura de las consultas |
+| `ANTHROPIC_API_KEY`, `AGENT_MODEL`, `AGENT_MAX_TOKENS` | Solo para `AGENT_MODE=claude` (API de Anthropic) |
+| `BENCH_N`, `BENCH_SEMILLA`, `BENCH_MODELOS`, `BENCH_ARQ`, `BENCH_REPETICIONES`, `BENCH_STEP_DELAY` | Valores por defecto de `bench.py` |
+| `GEN_RECLAMACIONES`, `GEN_POLIZAS`, `GEN_SEMILLA`, `GEN_FECHA_REFERENCIA`, `GEN_FECHA_INICIO_VIAJES`, `GEN_DIAS_VIAJES` | Tamaño, semilla y fechas del generador de datos |
 
 Los datos ficticios (nombres, catálogos de tipos, textos de las cláusulas y de los sucesos) son contenido del generador, no configuración.
 
@@ -232,7 +254,66 @@ Los datos ficticios (nombres, catálogos de tipos, textos de las cláusulas y de
 
 El push se valida **commit a commit**: un secreto añadido y borrado después sigue en el historial y también se bloquea. `git push --no-verify` se salta los hooks; no lo uses.
 
-# 12. Pendiente y próximos pasos
+# 12. Arquitectura y flujo de una revisión
+
+```
+Navegador (static/agente.js)           Servidor Flask (app.py)                 agent.py
+────────────────────────────           ───────────────────────                 ────────
+clic en una tecnología  ──POST──►  valida arquitectura / modelo
+                                    reserva un hueco (cupo)            ──►  construir_lineas()  (12 o 14 líneas)
+                                    lanza un hilo de trabajo                 │
+líneas marcadas en vivo ◄─NDJSON─   cola de eventos ◄── progreso ◄──────────┤ _correr(): reglas | lineas | una_llamada
+veredicto + estadísticas ◄────────  evento «fin»                              │            | arq_langgraph | arq_pydantic_ai
+                                                                              │            | arq_claude_sdk (módulos externos)
+                                                                              └► veredicto → salvaguardas → estadísticas
+```
+
+1. **Líneas a comprobar.** `construir_lineas` genera los requisitos del caso: 6 generales de la cláusula G-07 (póliza en vigor, prima al día, cobertura incluida, situación con derecho a pago, plazo, documentación), los requisitos específicos de la cobertura, el límite y el importe alto. Para los LLM se añade una línea más, las exclusiones de las cláusulas (que solo puede juzgar el LLM): 13 líneas frente a 12 del revisor por reglas.
+2. **Ejecución.** `_correr` elige la arquitectura. Las tres tecnologías viven en módulos `arq_<nombre>.py` que se importan al usarse y cumplen un contrato común (ver el comentario en `agent.py`).
+3. **Veredicto.** El revisor por reglas rechaza si falla un requisito bloqueante, pide validar si falla uno no bloqueante y aprueba en el resto. Con un LLM, el veredicto se ajusta si contradice las líneas: no puede aprobar con líneas sin cumplir, ni rechazar sin una línea bloqueante incumplida, y «Validar» siempre lleva comentario. La línea de exclusiones no es bloqueante: si parece aplicar, el caso pasa a «Validar».
+4. **Estadísticas.** Cada corrida mide duración, llamadas, tokens, tiempo por línea y su acuerdo con el revisor por reglas, que se ejecuta aparte como referencia.
+5. **Caída a reglas.** Si una tecnología falla (paquete, servidor, respuesta inválida), la corrida se rehace con el revisor por reglas y queda anotada como `fallback`, sin mezclarse con las métricas de las demás.
+6. **Aislamiento del Claude Agent SDK.** Recibe copias saneadas de los datos (sin campos de resultado) en una carpeta temporal, con una carpeta de configuración vacía, credenciales de Claude vacías, solo Read y Grep, y un hook que solo permite leer los tres archivos.
+
+# 13. Referencia de la API de revisión
+
+**`POST /reclamaciones/<id>/revision`**. Cuerpo JSON: `{"arquitectura": "<nombre>", "modelo": "<modelo de Ollama>" }`. La arquitectura es obligatoria: `langgraph`, `pydantic_ai`, `claude_sdk`, `lineas` o `una_llamada`. El modelo es opcional y debe estar en el servidor Ollama. Opcionalmente `"motor": "reglas"` fuerza el revisor por reglas.
+
+| Código | Cuándo |
+|---|---|
+| 200 | Flujo en directo (`application/x-ndjson`) |
+| 400 | Cuerpo mal formado, arquitectura no válida o modelo no disponible; no se ejecuta nada |
+| 404 | La reclamación no existe |
+| 405 | Cualquier método distinto de POST |
+| 429 | Ya hay `MAX_CORRIDAS_SIMULTANEAS` revisiones en curso |
+
+El flujo emite una línea JSON por evento:
+
+```json
+{"tipo": "progreso", "fase": "Analizando la línea 3 de 12: ...", "lineas": [{"id": "...", "grupo": "General", "requisito": "...", "estado": "cumple|no_cumple|duda|analizando|pendiente", "detalle": "..."}]}
+{"tipo": "fin", "resultado": {"veredicto": "Aprobado|Rechazado|Validar", "motivo": "...", "comentario": "solo con Validar", "importeAPagar": 0, "lineas": [...], "agente": {}, "nota": null, "stats": {"arquitectura": "...", "modelo": "...", "duracionSeg": 0, "llamadas": 0, "tokensEntrada": 0, "tokensSalida": 0, "tiempos": [], "acuerdoVeredicto": true, "fallback": false}}}
+{"tipo": "error", "error": "..."}
+```
+
+**`GET /api/claims`, `/api/policies`, `/api/clauses`**: los datos en JSON (las reclamaciones, como máximo `MAX_RECLAMACIONES`).
+
+# 14. Solución de problemas
+
+| Síntoma | Causa y solución |
+|---|---|
+| La app no arranca y dice «Faltan variables en el .env» | Copia `.env.example` a `.env` y rellena las que se listan |
+| En macOS el puerto 5000 da 403 | Lo usa AirPlay Receiver; usa otro `PORT` |
+| Una tecnología aparece como «No disponible» | Cayó a reglas; la nota dice por qué: paquete sin instalar (`pip install -r requirements-extra.txt`), servidor inalcanzable o modelo inexistente |
+| HTTP 403 del servidor Ollama | Bloquea el `User-Agent` por defecto de Python: define `AGENT_USER_AGENT` |
+| HTTP 429 del servidor Ollama | Límite de peticiones. Hay reintentos con espera; baja `LANGGRAPH_CONCURRENCIA` o `MAX_CORRIDAS_SIMULTANEAS` |
+| El modelo ignora el esquema JSON | Ocurre con algunos modelos (Gemma); las respuestas se interpretan de forma tolerante |
+| El veredicto cambia entre corridas | Los LLM varían aunque la temperatura sea 0; por eso hay revisor por reglas de referencia |
+| Un resultado desaparece al refrescar | Es el comportamiento previsto: los resultados son solo virtuales |
+| La búsqueda no encuentra nada | Todas las palabras deben aparecer (Y lógico); se ignoran acentos y mayúsculas |
+| Aviso `unrecognized_model` al usar el Claude Agent SDK | Es un log inocuo de su CLI con modelos que no son de Anthropic |
+| Se bloquea un commit o un push | Lee el listado del validador, quita el dato y muévelo al `.env`. No uses `--no-verify` |
+
+# 15. Pendiente y próximos pasos
 
 - Probar el modo `claude` (API de Anthropic) con una clave real: no se ha ejecutado. Las tres tecnologías ya se han ejecutado con modelos de Ollama.
 - Correr `bench.py` con los modelos y arquitecturas a comparar.
