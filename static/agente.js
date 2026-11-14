@@ -62,6 +62,9 @@ window.Agente = (function () {
     h += `<p class="vmotivo">${esc(r.motivo)}</p>`;
     if (r.veredicto === 'Validar') h += `<label class="vcomment"><span>Comentario del agente</span><textarea readonly rows="4">${esc(r.comentario)}</textarea></label>`;
     if (r.nota) h += `<p class="reject-box">${esc(r.nota)}</p>`;
+    const malas = (r.lineas || []).filter(l => l.estado !== 'cumple').map(l => '• ' + l.requisito + ': ' + l.detalle);
+    const coment = (r.veredicto === 'Validar' ? (r.comentario || '') + '\n\n' : '') + 'Motivo: ' + (r.motivo || '') + (malas.length ? '\n\nPuntos que no se cumplen o no constan:\n' + malas.join('\n') : '');
+    h += `<p class="vstats"><b>Duración de la revisión:</b> ${num(s.duracionSeg)} s</p><label class="vcomment"><span>Comentarios de la ejecución</span><textarea readonly rows="5">${esc(coment)}</textarea></label>`;
     h += `<h3 id="estadisticas-corrida">Estadísticas de la corrida</h3><div class="statgrid">`
       + `<div><span>Duración</span><b>${num(s.duracionSeg)} s</b></div>`
       + `<div><span>Arquitectura</span><b>${esc(nombre(s.arquitectura))}</b></div>`

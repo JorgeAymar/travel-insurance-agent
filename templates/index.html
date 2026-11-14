@@ -21,8 +21,7 @@
 </form>
 
 {% set cols = [('id','ID'),('tipoReclamacion','Tipo de reclamación'),
-  ('fechaIngreso','Ingreso'),('casoAbiertoPorCliente','Abierto por cliente'),('canal','Canal'),('fechaInicioViaje','Inicio viaje'),
-  ('fechaFinViaje','Fin viaje'),('destino','Destino')] %}
+  ('fechaIngreso','Ingreso · abierto por cliente'),('fechaInicioViaje','Viaje (inicio → fin)'),('destino','Destino · canal')] %}
 <section class="tec-bar" id="tecbar" data-def="{{ arq_def }}">
   <span class="lbl">Agente que procesa:</span>
   <button type="button" class="tec-opt" data-arq="langgraph"><b>LangGraph</b></button>
@@ -47,14 +46,6 @@
   </form>
 </dialog>
 
-<section class="card pad" id="resultado-ejecucion" hidden>
-  <div class="card-h2"><b>Resultado de la ejecución</b><span id="res-meta" class="muted small"></span></div>
-  <div class="scroll"><table class="simple" id="res-tabla">
-    <thead><tr><th>Fecha de ejecución</th><th>ID</th><th>Tipo de reclamación</th><th>Agente</th><th>Estado</th><th>¿Aplica devolución?</th><th>Importe a devolver</th><th>Comentario del agente</th></tr></thead>
-    <tbody></tbody></table></div>
-  <p class="muted small">🔒 Solo virtual: se pierde al refrescar la página. «Revisar a mano» = el agente no puede decidir y deja un comentario para quien deba validar.</p>
-</section>
-
 <section class="card pad" id="resumen-proc" hidden>
   <div class="card-h2"><b>Estadísticas del procesamiento</b><span class="muted small">🔒 solo virtual: se borra al refrescar</span></div>
   <div class="statgrid" id="resumen-grid"></div>
@@ -62,25 +53,30 @@
 <section class="card">
   <div class="card-h"><b>Expedientes</b><span class="pill">{{ found }} resultados</span></div>
   <div class="scroll"><table>
-    <thead><tr>{% for key, label in cols %}
-      <th class="{{ 'num' if key == 'importeReclamado' }}"><a class="{{ 'on' if sort == key }}"
-        href="{{ page_url(state, sort=key, dir=('asc' if sort == key and desc else 'desc'), p=1) }}">{{ label }}{{ ' ↓' if sort == key and desc }}{{ ' ↑' if sort == key and not desc }}</a></th>
-    {% endfor %}<th class="rev-h">Revisión del agente</th></tr></thead>
+    <thead><tr><th><a class="{{ 'on' if sort == 'id' }}"
+        href="{{ page_url(state, sort='id', dir=('asc' if sort == 'id' and desc else 'desc'), p=1) }}">ID{{ ' ↓' if sort == 'id' and desc }}{{ ' ↑' if sort == 'id' and not desc }}</a></th><th><a class="{{ 'on' if sort == 'tipoReclamacion' }}"
+        href="{{ page_url(state, sort='tipoReclamacion', dir=('asc' if sort == 'tipoReclamacion' and desc else 'desc'), p=1) }}">Tipo de reclamación{{ ' ↓' if sort == 'tipoReclamacion' and desc }}{{ ' ↑' if sort == 'tipoReclamacion' and not desc }}</a></th><th class="rev-h">Revisión del agente</th><th>Estado</th><th>¿Aplica devolución?</th><th>Duración de la revisión</th><th>Fecha de ejecución</th><th>Comentarios de la ejecución</th><th><a class="{{ 'on' if sort == 'fechaIngreso' }}"
+        href="{{ page_url(state, sort='fechaIngreso', dir=('asc' if sort == 'fechaIngreso' and desc else 'desc'), p=1) }}">Ingreso · abierto por cliente{{ ' ↓' if sort == 'fechaIngreso' and desc }}{{ ' ↑' if sort == 'fechaIngreso' and not desc }}</a></th><th><a class="{{ 'on' if sort == 'fechaInicioViaje' }}"
+        href="{{ page_url(state, sort='fechaInicioViaje', dir=('asc' if sort == 'fechaInicioViaje' and desc else 'desc'), p=1) }}">Viaje (inicio → fin){{ ' ↓' if sort == 'fechaInicioViaje' and desc }}{{ ' ↑' if sort == 'fechaInicioViaje' and not desc }}</a></th><th><a class="{{ 'on' if sort == 'destino' }}"
+        href="{{ page_url(state, sort='destino', dir=('asc' if sort == 'destino' and desc else 'desc'), p=1) }}">Destino · canal{{ ' ↓' if sort == 'destino' and desc }}{{ ' ↑' if sort == 'destino' and not desc }}</a></th></tr></thead>
     <tbody>
     {% for c in rows %}
       {% set href = url_for('detail', claim_id=c.id, back=request.full_path) %}
       <tr class="row" tabindex="0" data-href="{{ href }}">
         <td class="mono"><a href="{{ href }}">{{ c.id }}</a></td>
         <td>{{ c.tipoReclamacion }}</td>
-        <td class="mono">{{ c.fechaIngreso|fecha }}</td>
-        <td><span class="tag {{ 'yes' if c.casoAbiertoPorCliente else 'no' }}">{{ 'Sí' if c.casoAbiertoPorCliente else 'No' }}</span></td>
-        <td>{{ c.canal }}</td>
-        <td class="mono">{{ c.fechaInicioViaje|fecha }}</td><td class="mono">{{ c.fechaFinViaje|fecha }}</td>
-        <td>{{ c.destino }}</td>
         <td class="rev" data-id="{{ c.id }}"><span class="res"><span class="muted">—</span></span>
           <button type="button" class="run-btn" data-id="{{ c.id }}" aria-label="Revisar {{ c.id }} con el agente elegido">Revisar</button></td>
+        <td class="r-estado" data-id="{{ c.id }}"><span class="muted">—</span></td>
+        <td class="r-dev"><span class="muted">—</span></td>
+        <td class="r-dur mono"><span class="muted">—</span></td>
+        <td class="r-fecha mono"><span class="muted">—</span></td>
+        <td class="r-com"><textarea readonly rows="3" placeholder="Sin ejecutar" aria-label="Comentarios de la ejecución de {{ c.id }}"></textarea></td>
+        <td class="mono">{{ c.fechaIngreso|fecha }}<small class="d"><span class="tag {{ 'yes' if c.casoAbiertoPorCliente else 'no' }}">Abierto: {{ 'Sí' if c.casoAbiertoPorCliente else 'No' }}</span></small></td>
+        <td class="mono">{{ c.fechaInicioViaje|fecha }}<small class="d">→ {{ c.fechaFinViaje|fecha }}</small></td>
+        <td>{{ c.destino }}<small class="d">{{ c.canal }}</small></td>
       </tr>
-    {% else %}<tr><td colspan="9" class="empty">Sin resultados para este filtro.</td></tr>{% endfor %}
+    {% else %}<tr><td colspan="11" class="empty">Sin resultados para este filtro.</td></tr>{% endfor %}
     </tbody>
   </table></div>
   <div class="card-f">
@@ -126,7 +122,7 @@ document.querySelectorAll('tr.row').forEach(r => {
   function estimar() {
     const {n, fuera} = valorCampo();
     info.innerHTML = (fuera ? '⚠ Valor fuera de rango: se usará <b>' + n + '</b>. ' : '') + 'Se revisarán las primeras <b>' + n + '</b> '
-      + (n === 1 ? 'reclamación' : 'reclamaciones') + ' del listado (las que no estén en esta página solo aparecen en el cuadro de resultados).';
+      + (n === 1 ? 'reclamación' : 'reclamaciones') + ' del listado (las que no estén en esta página solo cuentan en las estadísticas).';
   }
   const marcar = () => opciones.forEach(b => { b.classList.toggle('on', b.dataset.arq === elegida); b.setAttribute('aria-pressed', b.dataset.arq === elegida); });
   campo.addEventListener('input', estimar);
@@ -141,28 +137,32 @@ document.querySelectorAll('tr.row').forEach(r => {
   const celdaDe = id => document.querySelector('td.rev[data-id="' + id + '"]');
   const pintar = (id, html) => { const c = celdaDe(id); if (c) c.querySelector('.res').innerHTML = html; };
 
-  /** Añade una fila al cuadro «Resultado de la ejecución»: estado, si aplica devolución, comentario y fecha de ejecución. */
-  function agregarFila(item, arq, r, error) {
-    const panel = document.getElementById('resultado-ejecucion'); panel.hidden = false;
-    const fecha = new Date().toLocaleString('es-ES'), tbody = document.querySelector('#res-tabla tbody');
-    let estado, dev, imp = '—', com;
+  const dur = seg => { seg = Number(seg); return seg < 60 ? A.num(seg) + ' s' : Math.floor(seg / 60) + ' min ' + Math.round(seg % 60) + ' s'; };
+  /** Rellena, en la MISMA fila de la reclamación: estado, ¿aplica devolución?, duración, fecha de ejecución y comentarios. */
+  function rellenarFila(item, arq, r, error, seg) {
+    const fila = document.querySelector('td.r-estado[data-id="' + item.id + '"]');
+    if (!fila) return;  // la reclamación no está en esta página: solo cuenta en el resumen
+    const tr = fila.closest('tr'), put = (c, h) => { tr.querySelector(c).innerHTML = h; };
+    const fecha = new Date().toLocaleString('es-ES');
+    let estado, dev, com;
     if (error) {
-      estado = '<span class="muted">Error</span>'; dev = '<span class="muted">—</span>'; com = A.esc(error);
+      estado = '<span class="muted">Error</span>'; dev = '<span class="muted">—</span>'; com = 'Error de ejecución: ' + error;
     } else {
       const v = r.veredicto, sinLlm = r.stats && r.stats.fallback;
-      estado = '<span class="badge v-' + A.esc(v) + '">' + A.esc(v) + '</span>' + (sinLlm ? '<small class="d">sin LLM (reglas)</small>' : '');
-      dev = v === 'Aprobado' ? '<b class="dev-si">Sí, aplica</b>' : v === 'Rechazado' ? '<b class="dev-no">No aplica</b>' : '<b class="dev-rev">Revisar a mano</b>';
-      if (v === 'Aprobado' && r.importeAPagar != null) imp = eur(r.importeAPagar);
-      com = v === 'Validar' ? '<b>' + A.esc(r.comentario || r.motivo) + '</b><small class="d">' + A.esc(r.motivo) + '</small>' : A.esc(r.motivo);
+      estado = '<span class="badge v-' + A.esc(v) + '">' + A.esc(v) + '</span><small class="d">' + A.esc(A.nombre(arq)) + (sinLlm ? ' · sin LLM (reglas)' : '') + '</small>';
+      dev = v === 'Aprobado' ? '<b class="dev-si">Sí, aplica</b>' + (r.importeAPagar != null ? '<small class="d">' + eur(r.importeAPagar) + '</small>' : '')
+        : v === 'Rechazado' ? '<b class="dev-no">No aplica</b>' : '<b class="dev-rev">Revisar a mano</b>';
+      com = (v === 'Validar' ? (r.comentario || '') + '\n\n' : '') + 'Motivo: ' + (r.motivo || '');
+      const malas = (r.lineas || []).filter(l => l.estado !== 'cumple').map(l => '• ' + l.requisito + ': ' + l.detalle);
+      if (malas.length) com += '\n\nPuntos que no se cumplen o no constan:\n' + malas.join('\n');
     }
-    const fila = document.createElement('tr');
-    fila.innerHTML = '<td class="mono">' + A.esc(fecha) + '</td><td class="mono"><a href="/reclamaciones/' + encodeURIComponent(item.id) + '" target="_blank" rel="noopener">' + A.esc(item.id) + '</a></td>'
-      + '<td>' + A.esc(item.tipo || '') + '</td><td>' + A.esc(A.nombre(arq)) + '</td><td>' + estado + '</td><td>' + dev + '</td><td class="mono">' + imp + '</td><td class="com">' + com + '</td>';
-    tbody.appendChild(fila);
-    document.getElementById('res-meta').textContent = tbody.children.length + ' ' + (tbody.children.length === 1 ? 'reclamación revisada' : 'reclamaciones revisadas');
+    put('.r-estado', estado); put('.r-dev', dev);
+    put('.r-dur', seg == null ? '<span class="muted">—</span>' : A.esc(dur(seg)));
+    put('.r-fecha', A.esc(fecha));
+    tr.querySelector('.r-com textarea').value = com;
   }
 
-  /** Revisa UNA reclamación con el agente indicado; pinta su fila (si está en esta página), el cuadro de resultados y el resumen. */
+  /** Revisa UNA reclamación con el agente indicado; rellena los campos de su propia fila (si está en esta página) y el resumen. */
   async function revisar(item, arq) {
     const id = item.id, btn = document.querySelector('.run-btn[data-id="' + id + '"]');
     if (btn) btn.disabled = true;
@@ -173,13 +173,13 @@ document.querySelectorAll('tr.row').forEach(r => {
         resultados[id] = r;
         const s = r.stats;
         pintar(id, '<span class="badge v-' + A.esc(r.veredicto) + '">' + A.esc(r.veredicto) + '</span><small class="d">' + A.esc(A.nombre(s.arquitectura)) + (s.fallback ? ' (sin LLM)' : '') + ' · ' + A.num(s.duracionSeg) + ' s · ' + s.llamadas + ' llam.</small>');
-        agregarFila(item, arq, r, null);
+        rellenarFila(item, arq, r, null, s.duracionSeg);
         resumen();
         break;
       } catch (e) {
         if (/demasiadas revisiones/i.test(e.message)) { pintar(id, '<span class="muted">En espera…</span>'); await sleep(4000); continue; }
         pintar(id, '<span class="muted" title="' + A.esc(e.message) + '">Error</span>');
-        agregarFila(item, arq, null, e.message);
+        rellenarFila(item, arq, null, e.message, null);
         break;
       }
     }
@@ -209,7 +209,6 @@ document.querySelectorAll('tr.row').forEach(r => {
     elegida = arq; marcar();
     parar = false; enLote = true;
     campo.disabled = true; opciones.forEach(b => { b.disabled = true; }); btnParar.hidden = false;
-    document.getElementById('resultado-ejecucion').hidden = false;
     for (let i = 0; i < lista.length && !parar; i++) {
       info.textContent = 'Revisando ' + (i + 1) + ' de ' + lista.length + ' (' + lista[i].id + ') con ' + A.nombre(arq) + '…';
       await revisar(lista[i], arq);

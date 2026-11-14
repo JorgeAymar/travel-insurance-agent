@@ -31,6 +31,14 @@ class ListadoLote(unittest.TestCase):
         self.assertIn(f'max="{len(ids)}"', html)
         self.assertIn(f'value="{min(cfg.entero("ANALISIS_RECLAMACIONES_DEFECTO"), len(ids))}"', html)
 
+    def test_el_resultado_va_en_la_misma_fila_de_la_reclamacion(self):
+        html = self.cliente.get("/").get_data(as_text=True)
+        for campo in ("Estado", "¿Aplica devolución?", "Duración de la revisión", "Fecha de ejecución", "Comentarios de la ejecución"):
+            self.assertIn(f"<th>{campo}</th>", html)
+        self.assertIn('class="r-com"', html)
+        self.assertNotIn('id="resultado-ejecucion"', html)
+        self.assertNotIn('id="res-tabla"', html)
+
     def test_sin_resultados_el_listado_no_rompe(self):
         html, ids = self._ids("/?q=zzzzzz")
         self.assertEqual(ids, [])

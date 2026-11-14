@@ -118,8 +118,8 @@ table.cmp3 tr.dif th,table.cmp3 tr.dif td{background:color-mix(in srgb,var(--amb
 @media (max-width:900px){#resumen-proc .statgrid{grid-template-columns:1fr 1fr}}
 
 /* La columna de «Revisar» se queda pegada a la derecha: el botón siempre es visible, incluso con la tabla desplazada */
-th.rev-h,td.rev{position:sticky;right:0;z-index:1}
-td.rev,tr.row:hover td.rev,tr.row:focus td.rev{background:var(--card);box-shadow:-8px 0 8px -8px rgba(0,0,0,.25)}
+
+
 
 /* Análisis de las reclamaciones */
 .ana-ctl{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}.ana-ctl label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:3px}
@@ -145,3 +145,5 @@ dialog.dlg::backdrop{background:rgba(10,20,40,.45)}dialog.dlg h2{margin:0 0 10px
 #res-tabla td.com{max-width:520px;line-height:1.45}#res-tabla td.com small{display:block;color:var(--muted);margin-top:3px}
 .dev-si{color:var(--green)}.dev-no{color:var(--red)}.dev-rev{color:var(--amber)}
 #res-tabla td.mono{white-space:nowrap}
+td.r-com{min-width:280px}td.r-com textarea{width:100%;min-width:260px;font:12px/1.4 inherit;font-family:inherit;border:1px solid var(--line,#dfe5ee);border-radius:6px;padding:6px;background:transparent;color:inherit;resize:vertical}
+td.r-estado small.d,td.r-dev small.d{display:block}td.r-dur,td.r-fecha{white-space:nowrap}
